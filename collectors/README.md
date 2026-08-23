@@ -121,7 +121,7 @@ Data's 30-second cap - five of them cost 150 s a run); Zepto and Blinkit use
 
 ## How the app drives them
 
-`server/bd_client.py`, three REST calls, identical in shape for every universe:
+`server/bd_client.py`, four REST calls, identical in shape for every universe:
 
 ```
 POST /dca/trigger?collector=<c_id>[&version=dev]&queue_next=1
@@ -136,6 +136,9 @@ GET  /dca/log/{collection_id}
 GET  /dca/dataset?id=<collection_id>
      202 -> still building
      200 -> the delivered rows, as JSONL (one record per line)
+
+POST /dca/jobs/{collection_id}/cancel
+     -> stops a job the watchdog or a timeout has given up on
 ```
 
 The trigger must be the REST call. The Studio CLI only takes a positional URL and
