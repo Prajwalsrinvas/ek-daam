@@ -36,33 +36,39 @@ def test_universes_reports_wiring_honestly(client: TestClient) -> None:
     rows = {u["id"]: u for u in body["universes"]}
 
     assert body["mode"] == "mock"
-    assert [u["id"] for u in body["universes"]] == ["zepto", "blinkit", "instamart"]
+    assert [u["id"] for u in body["universes"]] == ["zepto", "blinkit", "instamart", "chaos"]
     # No collector id is configured in tests, so nothing claims to be wired.
     assert all(u["wired"] is False for u in rows.values())
     # Mock mode still dispatches zepto, because it has a fixture and a real mapper.
     assert rows["zepto"]["dispatchable"] is True and rows["zepto"]["status"] == "mock"
     assert rows["blinkit"]["dispatchable"] is False
+    # chaos has a real mapper now, so it is listed. It has no mock fixture, so
+    # mock mode says so rather than dispatching it.
+    assert (rows["chaos"]["dispatchable"], rows["chaos"]["status"]) == (False, "no fixture")
+    assert rows["chaos"]["badge"] == "chaos"
     # No area list any more: any valid Indian pincode is accepted, so there is
     # nothing for the server to enumerate.
     assert "areas" not in body
 
 
-def test_a_universe_with_no_mapper_is_not_offered_to_the_ui(client: TestClient, settings) -> None:
-    """`chaos` was never built. Its registry row is the record of the shape a
-    fourth universe would take, and its stub mapper still refuses rather than
-    reporting empty rows — but the API does not offer it, because a permanently
-    dead "no mapper yet" chip reads as a broken feature rather than an unbuilt
-    one. A universe with a real mapper is always listed, wired or not.
+def test_a_universe_with_no_mapper_is_not_offered_to_the_ui(
+    client: TestClient, settings, monkeypatch
+) -> None:
+    """A universe whose mapper is a stub can never be dispatched, so the API does
+    not offer it: a permanently dead "no mapper yet" chip reads as a broken
+    feature rather than an unbuilt one. Every registered mapper is real today, so
+    the filter is exercised by putting a stub back.
     """
+    from server import mappers
     from server.registry import listed, universes
 
-    body = client.get("/api/universes").json()
+    monkeypatch.setitem(mappers.MAPPERS, "chaos", mappers._stub("chaos"))
 
-    assert "chaos" not in {u["id"] for u in body["universes"]}
     assert "chaos" in {u.id for u in universes(settings)}  # the row is still there
     assert "chaos" not in {u.id for u in listed(settings)}
     # blinkit has a real mapper and no fixture in mock mode: not dispatchable,
     # still listed, and honest about why.
+    body = client.get("/api/universes").json()
     blinkit = next(u for u in body["universes"] if u["id"] == "blinkit")
     assert (blinkit["dispatchable"], blinkit["status"]) == (False, "no fixture")
 

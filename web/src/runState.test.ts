@@ -185,7 +185,7 @@ group("state transitions", () => {
 
   it("ignores an unknown event type without losing the index", () => {
     nextIndex = 1;
-    const state = foldAll(emptyRunState(), [event("heal_started" as EventType, {})]);
+    const state = foldAll(emptyRunState(), [event("incident" as EventType, {})]);
 
     expect(state.lastEventId).toBe(1);
     expect(state.feed).toHaveLength(1);
@@ -292,7 +292,17 @@ group("describe", () => {
 
   it("falls back to the bare type for a reserved event", () => {
     nextIndex = 1;
-    expect(describeEvent(event("heal_started" as EventType, {}))).toBe("heal_started");
+    expect(describeEvent(event("incident" as EventType, {}))).toBe("incident");
+  });
+
+  it("describes the self-heal cycle", () => {
+    nextIndex = 1;
+    expect(describeEvent(event("heal_started", { prompt_chars: 420 }))).toContain("420");
+    expect(describeEvent(event("heal_approved", { auto_save: true }))).toContain("auto_save on");
+    expect(describeEvent(event("heal_promoted", { template: "t_chaos.2" }))).toContain(
+      "t_chaos.2",
+    );
+    expect(describeEvent(event("progress", { step: "code_fixer" }))).toBe("step code_fixer");
   });
 });
 

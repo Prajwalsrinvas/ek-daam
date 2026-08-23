@@ -8,7 +8,7 @@ Built for the Bright Data hackathon.
 
 ## What it does
 
-- Runs three Scraper Studio collectors in parallel.
+- Runs the wired Scraper Studio collectors in parallel.
 - Streams collector lifecycle events to the browser.
 - Normalizes prices, pack sizes, stock state, delivery estimates, and sponsorship.
 - Groups listings only when brand, pack size, variant, and product names agree.

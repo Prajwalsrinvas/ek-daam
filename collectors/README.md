@@ -1,13 +1,15 @@
 # The collectors
 
-The Bright Data Scraper Studio code behind the three universes. Each collector is
-two files: an **interaction** script that drives a real browser, and a **parser**
-that reads cheap facts off the resulting DOM.
+The Bright Data Scraper Studio code behind the universes. Each collector is two
+files: an **interaction** script that drives a real browser, and a **parser** that
+reads cheap facts off the resulting DOM.
 
-These files are **copied verbatim from the production templates on 2026-08-23**.
-The only changes are cosmetic comment fixes — every one of them is listed at the
-bottom of this file, and the code outside comments is byte-identical to what ran,
-with a single exception noted there.
+The zepto, blinkit and instamart files are **copied verbatim from the production
+templates on 2026-08-23**. The only changes are cosmetic comment fixes — every one
+of them is listed at the bottom of this file, and the code outside comments is
+byte-identical to what ran, with a single exception noted there. The chaos pair is
+a draft written against the store this app serves; see "The chaos collector"
+below.
 
 They are here to be read, not to be run from this repo: they execute inside
 Scraper Studio, against Studio's browser worker and its API.
@@ -17,6 +19,7 @@ collectors/
   zepto/interaction.js      zepto/parser.js
   blinkit/interaction.js    blinkit/parser.js
   instamart/interaction.js  instamart/parser.js
+  chaos/interaction.js      chaos/parser.js
 ```
 
 ## Input contract
@@ -72,6 +75,7 @@ or equivalent tier price has nowhere to travel, so it cannot leak into a receipt
 | zepto | Browser |
 | blinkit | Browser |
 | instamart | Browser |
+| chaos | Browser |
 
 Collector and template IDs are deployment configuration. They are not committed
 to this repository.
@@ -170,6 +174,28 @@ they were written. Each one dumps the surrounding DOM on a miss, so a single
 preview run replaces a guess with a fact. They have been left alone rather than
 cleared wholesale, because clearing a marker is a claim, and only a run can make
 it.
+
+## The chaos collector
+
+`chaos/` is different from the other three in two ways, and both are deliberate.
+
+**It is a draft.** It has not been created in Scraper Studio and has never run.
+It is written to the same 18-field contract and in the same style, so it can be
+pasted into a new collector as it is, but nothing here has been proved by a run.
+
+**Its target is this app.** The chaos universe reads the store the app serves at
+`/chaos`, which exists so a collector can be broken and repaired on demand:
+`server/chaos_store.py` renders one catalogue as two structurally different pages
+and a token-protected endpoint decides which one is served. Set `STORE_BASE` at
+the top of `chaos/interaction.js` to the deployed app's own address before
+creating the collector.
+
+There is no JSON API behind that store and no machine-readable copy of the
+catalogue in the page, so every field is read out of the DOM. The selectors
+target store version `v1` (`.product-card` tiles, `#delivery-area`). They stop
+matching when the store is flipped to `v2`, which is the point: the break is what
+Bright Data's self-healing is then asked to repair. See `docs/RUNBOOK.md`,
+"The chaos universe", for the flip and heal commands.
 
 ## The comment fixes applied to these copies
 

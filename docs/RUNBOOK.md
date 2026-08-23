@@ -100,9 +100,9 @@ There is no `SVERSE_PINCODE_ALLOWLIST` and no `SVERSE_PINCODE_MAP` any more —
 delete both from an older `.env`. Any 6-digit Indian pincode is accepted and the
 app needs no coordinates for it.
 
-Leave `SVERSE_FIXTURES_DIR` unset. `SVERSE_COLLECTOR_CHAOS` stays empty: that
-universe was never built, so it reports "not wired" and is filtered out of
-`/api/universes` (see "The chaos universe" below).
+Leave `SVERSE_FIXTURES_DIR` unset. `SVERSE_COLLECTOR_CHAOS` is the chaos
+universe's collector; leave it empty and that universe reports "not wired" and
+takes no part in a run (see "The chaos universe" below).
 
 **The collector version can be set per universe.** `SVERSE_COLLECTOR_VERSION` is
 the default for everything; `SVERSE_COLLECTOR_VERSION_<UNIVERSE>` overrides it
@@ -144,8 +144,7 @@ at import; there is no hot reload of the environment.
 blinkit and instamart each `wired: true` / `dispatchable: true` /
 `status: "wired"`. A universe you have not wired an id for reports
 `wired: false` / `status: "not wired"` and takes no part in a run. The chaos row
-is not listed at all — it has no mapper, so it could never be dispatched and a
-dead chip in the UI would be worse than an absent one.
+is listed too, and reports the same way.
 
 **8. First live run.** The trigger is the risky step. A `422` means the collector's
 input schema still disagrees — the `universe` routing hint is already stripped on
@@ -200,15 +199,58 @@ there.
 
 ## The chaos universe
 
-`chaos` is a registry row and a stub mapper. **It was never built.** There is no
-chaos site, no collector and no payload contract behind it — the row exists as
-the record of the shape a fourth universe would take, and the stub is there so a
-half-built universe can never quietly report "no results".
+`chaos` is the reliability universe. It does not point at a shop on the internet:
+it points at a small grocery store this app serves itself at `/chaos`, so a
+collector can be broken and repaired while somebody is watching.
 
-`GET /api/universes` filters it out (`registry.listed()` drops any universe whose
-mapper is a stub), so the UI shows three chips, not a fourth dead one. Building it
-means: write the mapper, drop the stub from `MAPPERS`, and the row starts being
-listed on its own — no other change.
+**The store.** `server/chaos_store.py` holds one catalogue and two renderings of
+it. `v1` is a grid of `.product-card` tiles; `v2` is a `.listing-row` table with
+different tags, class names, attribute names and nesting. Both serve the same
+prices, the same stock states and the same product ids, and neither embeds a
+machine-readable copy of the catalogue: a parser that could read a JSON blob out
+of the page would survive any redesign, and the break would prove nothing.
+
+The URL contract does not change between versions:
+
+```
+GET /chaos/search?q=amul%20butter&pincode=560001
+```
+
+With no valid pincode the store shows a location prompt and no prices, the way a
+real quick-commerce site does. With one, it renders a delivering-to line that
+echoes that pincode, which is what the app's location proof reads.
+
+**Flipping it.** Which version is served is server-side state. It starts at
+`SVERSE_CHAOS_VERSION` and changes only through a token-protected endpoint:
+
+```bash
+curl -sS -X POST http://localhost:8000/api/chaos/flip \
+  -H "X-Chaos-Token: $SVERSE_CHAOS_ADMIN_TOKEN" \
+  -H 'Content-Type: application/json' -d '{"version": "v2"}'
+```
+
+Omit `version` to advance to the next one and wrap. `GET /api/chaos` reports the
+active version without a token. With `SVERSE_CHAOS_ADMIN_TOKEN` unset, flipping
+answers 503: an empty token is not a blank password.
+
+**Healing it.** `POST /api/chaos/heal` (same token) drives Bright Data's AI flow
+against the chaos collector and records it as a run of its own:
+
+```bash
+curl -sS -X POST http://localhost:8000/api/chaos/heal \
+  -H "X-Chaos-Token: $SVERSE_CHAOS_ADMIN_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "the store was redesigned; update the selectors"}'
+```
+
+It returns a `run_id` whose event stream carries the cycle: `heal_started`, a
+`progress` line per stage Bright Data reports, `heal_previewed` with the job's
+own `preview_result`, `heal_approved` (`resume_automation_job` with
+`auto_save: true`, which is what publishes the template), and `heal_promoted`
+only when `save_new_template` appears in the job's own `completed_steps`. A job
+that finishes without that step is reported as a failure to publish, because an
+approval on its own leaves an unpublished draft while production keeps running
+the broken template.
 
 ---
 
@@ -236,8 +278,8 @@ Then add a case to `web/src/runState.test.ts` — the "renders a line for every
 implemented event type" test will fail until `describe` handles it, which is the
 cheapest possible reminder.
 
-The reserved heal events (`incident`, `heal_started`, `heal_previewed`,
-`heal_approved`, `heal_promoted`) are declared but not emitted, and are exactly
+The four `heal_*` events are emitted by a heal run and are wired through all five
+places. `incident` is still declared and not emitted, and is exactly
 the case this checklist exists for.
 
 ---

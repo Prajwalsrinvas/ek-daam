@@ -197,12 +197,15 @@ def _stub(universe: str) -> Callable[[Any], list[NormalizedRow]]:
 from .zepto import map_zepto  # noqa: E402  (registry needs the concrete mappers)
 from .blinkit import map_blinkit  # noqa: E402
 from .instamart import map_instamart  # noqa: E402
+from .chaos import map_chaos  # noqa: E402
 
 MAPPERS: dict[str, Mapper] = {
     "zepto": map_zepto,
     "blinkit": map_blinkit,
     "instamart": map_instamart,
-    "chaos": _stub("chaos"),
+    # Demo/reliability universe: it reads the store this app serves at /chaos,
+    # not a third-party site. See server/chaos_store.py.
+    "chaos": map_chaos,
 }
 
 

@@ -10,18 +10,34 @@ import contextlib
 from collections.abc import AsyncIterator
 from typing import Any
 
-from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+import logging
+import re
+import secrets as _secrets
+
+from fastapi import FastAPI, Header, HTTPException, Request, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from .bd_client import placeholder_png
+from .chaos_store import VERSIONS, ChaosStore
 from .config import REPO_ROOT, Settings, get_settings
 from .events import heartbeat_frame, parse_last_event_id
 from .registry import listed
 from .runs import RunManager, RunRejected, RunThrottled
 
+log = logging.getLogger("scrapeverse.app")
+
 HEARTBEAT_SECONDS = 15.0
 WEB_DIST = REPO_ROOT / "web" / "dist"
+
+# The chaos store is a live page, and a flipped version has to be visible on the
+# next request or the demonstration proves nothing.
+NO_STORE = {"Cache-Control": "no-store"}
+
+CHAOS_TOKEN_HEADER = "X-Chaos-Token"
+
+_CHAOS_IMAGE_RE = re.compile(r"^[A-Za-z0-9._-]{1,60}\.png$")
 
 
 class RunRequest(BaseModel):
@@ -34,6 +50,17 @@ class RunRequest(BaseModel):
     pincode: str = Field(max_length=20)
 
 
+class ChaosFlipRequest(BaseModel):
+    """Which rendering to serve. Omitted means the next one in the list."""
+
+    version: str | None = Field(default=None, max_length=20)
+
+
+class ChaosHealRequest(BaseModel):
+    prompt: str | None = Field(default=None, max_length=4000)
+    custom_input: list[dict[str, Any]] | None = None
+
+
 def _client_ip(request: Request) -> str:
     if request.client and request.client.host:
         return request.client.host
@@ -42,20 +69,43 @@ def _client_ip(request: Request) -> str:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+    # Built here rather than in the lifespan so the store answers even when an
+    # app is constructed without one, which is how several tests build it.
+    chaos = ChaosStore(settings.chaos_version)
 
     @contextlib.asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.settings = settings
         app.state.runs = RunManager(settings)
+        app.state.chaos = chaos
         try:
             yield
         finally:
             await app.state.runs.shutdown()
 
     app = FastAPI(title="EkDaam", version="0.1.0", lifespan=lifespan)
+    app.state.chaos = chaos
 
     def manager(request: Request) -> RunManager:
         return request.app.state.runs
+
+    def require_chaos_token(supplied: str | None) -> None:
+        """The chaos admin gate: flipping the store and healing its collector.
+
+        An unset token disables both, because there is no value a caller could
+        send that would be accepted. Compared with `compare_digest` so a wrong
+        token cannot be found one character at a time.
+        """
+        configured = settings.chaos_admin_token
+        if not configured:
+            raise HTTPException(
+                status_code=503,
+                detail="chaos admin is disabled: SVERSE_CHAOS_ADMIN_TOKEN is not set",
+            )
+        if not supplied or not _secrets.compare_digest(supplied, configured):
+            raise HTTPException(
+                status_code=401, detail=f"{CHAOS_TOKEN_HEADER} missing or incorrect"
+            )
 
     # -- registry --------------------------------------------------------
     @app.get("/api/universes")
@@ -189,6 +239,69 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             meta = await manager(request).start_replay(run_id, _client_ip(request))
         except RunThrottled as exc:
             # Must be caught before RunRejected — it is a subclass.
+            raise HTTPException(status_code=429, detail=str(exc)) from exc
+        except RunRejected as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"run_id": meta.run_id, "meta": meta.model_dump()}
+
+    # -- the chaos store -------------------------------------------------
+    # A grocery store this app serves itself, so the reliability story can be
+    # demonstrated on demand: the same catalogue is rendered by two structurally
+    # different markups, and which one is served is server-side state that only
+    # the token holder can change. Registered before the frontend mount, which
+    # claims "/".
+    @app.get("/chaos", response_class=HTMLResponse)
+    @app.get("/chaos/search", response_class=HTMLResponse)
+    async def chaos_page(request: Request, q: str = "", pincode: str = "") -> HTMLResponse:
+        store: ChaosStore = request.app.state.chaos
+        return HTMLResponse(store.render(q, pincode), headers=NO_STORE)
+
+    @app.get("/chaos/static/{name}")
+    async def chaos_image(name: str) -> Response:
+        """A flat placeholder image per product tile. The store is fictional and
+        has no product photography; the tiles exist so the page has the shape of
+        a real listing."""
+        if not _CHAOS_IMAGE_RE.match(name):
+            raise HTTPException(status_code=404, detail="no such image")
+        return Response(content=placeholder_png((21, 93, 252), 96, 96), media_type="image/png")
+
+    @app.get("/api/chaos")
+    async def chaos_state(request: Request) -> dict[str, Any]:
+        store: ChaosStore = request.app.state.chaos
+        return {**store.state(), "admin_enabled": bool(settings.chaos_admin_token)}
+
+    @app.post("/api/chaos/flip")
+    async def chaos_flip(
+        body: ChaosFlipRequest,
+        request: Request,
+        token: str | None = Header(default=None, alias=CHAOS_TOKEN_HEADER),
+    ) -> dict[str, Any]:
+        require_chaos_token(token)
+        store: ChaosStore = request.app.state.chaos
+        previous = store.version
+        try:
+            current = store.flip(body.version)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # Visible on the server as well as in the response: a version change is
+        # the event the whole demonstration turns on.
+        log.info("chaos store version %s -> %s", previous, current)
+        return {"previous": previous, "version": current, "versions": list(VERSIONS)}
+
+    @app.post("/api/chaos/heal", status_code=202)
+    async def chaos_heal(
+        body: ChaosHealRequest,
+        request: Request,
+        token: str | None = Header(default=None, alias=CHAOS_TOKEN_HEADER),
+    ) -> dict[str, Any]:
+        """Run Bright Data self-healing against the chaos collector, as a run."""
+        require_chaos_token(token)
+        try:
+            meta = manager(request).start_heal(
+                prompt=body.prompt, custom_input=body.custom_input
+            )
+        except RunThrottled as exc:
+            # Must be caught before RunRejected - it is a subclass.
             raise HTTPException(status_code=429, detail=str(exc)) from exc
         except RunRejected as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -27,6 +27,11 @@ export const IMPLEMENTED_EVENT_TYPES = [
   "failed",
   "timed_out",
   "done",
+  // The self-heal cycle, emitted by a heal run (POST /api/chaos/heal).
+  "heal_started",
+  "heal_previewed",
+  "heal_approved",
+  "heal_promoted",
 ] as const satisfies readonly EventType[];
 
 export type UniverseStatus =
@@ -273,7 +278,8 @@ export function describe(event: RunEvent): string {
     case "triggered":
       return `collector job ${d.job_id} (version ${d.version})`;
     case "progress":
-      return `${d.pages_left} page(s) left`;
+      // A scrape job counts pages; a self-heal job names the stage it is on.
+      return d.step ? `step ${d.step}` : `${d.pages_left} page(s) left`;
     case "rows":
       return `${d.n} row(s) parsed`;
     case "screenshot":
@@ -296,6 +302,14 @@ export function describe(event: RunEvent): string {
         : `run timed out after ${d.after_s}s`;
     case "done":
       return `run complete — ${d.rows_total} row(s), ${d.groups} matched group(s)`;
+    case "heal_started":
+      return `self-heal requested (${d.prompt_chars} character prompt)`;
+    case "heal_previewed":
+      return `fix proposed at step ${d.step}, awaiting approval`;
+    case "heal_approved":
+      return `approved, auto_save ${d.auto_save === true ? "on" : "off"}`;
+    case "heal_promoted":
+      return `healed template saved to production${d.template ? ` (${d.template})` : ""}`;
     default:
       return event.type;
   }

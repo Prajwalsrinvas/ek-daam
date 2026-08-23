@@ -13,8 +13,9 @@ export type EventType =
   | "failed"
   | "timed_out"
   | "done"
-  // reserved for the self-healing pass — defined, not emitted yet
+  // reserved, defined but not emitted yet
   | "incident"
+  // the self-heal cycle (POST /api/chaos/heal)
   | "heal_started"
   | "heal_previewed"
   | "heal_approved"

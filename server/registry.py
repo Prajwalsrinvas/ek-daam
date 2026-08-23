@@ -43,6 +43,9 @@ _ROWS: tuple[Universe, ...] = (
     Universe(
         id="instamart", display="Instamart-verse", color="#eb5b00", badge="live", mapper="instamart"
     ),
+    # Demo/reliability universe. It points at the store this app serves itself
+    # at /chaos, whose markup can be changed on command, so a collector can be
+    # broken and repaired on demand. Same 18-field row contract as the rest.
     Universe(id="chaos", display="Chaos-verse", color="#155dfc", badge="chaos", mapper="chaos"),
 )
 
@@ -90,18 +93,15 @@ def dispatchable(settings: Settings) -> list[Universe]:
 
 
 def listed(settings: Settings) -> list[Universe]:
-    """What `/api/universes` shows — every universe that could actually run.
+    """What `/api/universes` shows: every universe that could actually run.
 
     A universe whose mapper is a stub cannot be dispatched in ANY mode and never
-    will be until someone writes the mapper. Showing it put a permanently dead
-    "Chaos-verse — no mapper yet" chip in the UI, which reads as a broken feature
-    rather than as an unbuilt one. The registry row stays: it is the record of
-    the shape a fourth universe would take, and it is still what
-    `test_unimplemented_mappers_refuse_rather_than_return_empty` holds to
-    refusing rather than reporting empty rows.
+    will be until someone writes the mapper, so it is filtered out. A permanently
+    dead "no mapper yet" chip reads as a broken feature rather than as an unbuilt
+    one. The stub mechanism stays for the next universe someone starts.
 
-    A universe with a real mapper is always listed, even unwired — "not wired"
-    is honest status a reader can act on.
+    A universe with a real mapper is always listed, even unwired: "not wired" is
+    honest status a reader can act on.
     """
     return [u for u in universes(settings) if not mapper_is_stub(u.mapper)]
 

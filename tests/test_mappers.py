@@ -137,14 +137,19 @@ def test_empty_and_junk_payloads_yield_no_rows() -> None:
     assert zepto("not a payload") == []
 
 
-@pytest.mark.parametrize("name", ["chaos"])
-def test_unimplemented_mappers_refuse_rather_than_return_empty(name: str) -> None:
-    assert mapper_is_stub(name)
+def test_a_stub_mapper_refuses_rather_than_returning_empty() -> None:
+    """The guarantee a half-built universe rests on: no mapper may answer "no
+    results" for a site nobody has written a mapper for yet."""
+    from server.mappers import _stub
+
+    stub = _stub("somewhere")
+
+    assert getattr(stub, "is_stub", False) is True
     with pytest.raises(NotImplementedError):
-        MAPPERS[name]({})
+        stub({})
 
 
-@pytest.mark.parametrize("name", ["zepto", "blinkit", "instamart"])
+@pytest.mark.parametrize("name", ["zepto", "blinkit", "instamart", "chaos"])
 def test_implemented_mappers_are_not_stubs(name: str) -> None:
     assert not mapper_is_stub(name)
 

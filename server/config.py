@@ -50,6 +50,19 @@ class Settings:
     # only decides the `known_store` flag on the `validated` event. Location
     # itself is proved by what the SITE resolved (see `runs.py`).
     store_maps: dict[str, dict[str, frozenset[str]]] = field(default_factory=dict)
+    # Which rendering the chaos store serves at startup (server/chaos_store.py).
+    # Runtime changes go through the token-protected flip endpoint, never here.
+    chaos_version: str = ""
+    # Shared secret for the chaos admin endpoints (flip and heal). EMPTY MEANS
+    # DISABLED: with no token configured there is no value a caller could send
+    # that would be accepted, so a deployment that forgets to set one cannot
+    # have its store flipped or its collector healed by a stranger.
+    chaos_admin_token: str = ""
+    # Self-heal polling. A Bright Data heal has run anywhere from ~30s to ~4.5
+    # minutes in this project's own measurements, so the timeout is generous and
+    # the interval is slower than the scrape poll.
+    heal_poll_interval_s: float = 5.0
+    heal_timeout_s: float = 600.0
     # universe -> collector version, from SVERSE_COLLECTOR_VERSION_<UNIVERSE>.
     # Only universes that set an override appear here; everything else uses
     # `collector_version`. This is what lets ONE universe run a dev template
@@ -175,6 +188,18 @@ def _clamped(name: str, value: float, minimum: float, fallback: float) -> float:
     return fallback
 
 
+def _chaos_version(raw: str | None) -> str:
+    """Which chaos-store rendering to serve at startup.
+
+    An unrecognised value falls back to the first version rather than being
+    passed through, so a typo cannot leave the store with no renderer.
+    """
+    from .chaos_store import DEFAULT_VERSION, VERSIONS
+
+    value = (raw or "").strip().lower()
+    return value if value in VERSIONS else DEFAULT_VERSION
+
+
 def _version(raw: str | None, default: str | None = None) -> str | None:
     """`dev`/`prod`, case-insensitive. Anything else is not a version we can send.
 
@@ -264,6 +289,14 @@ def build_settings() -> Settings:
         runs_dir=runs_dir,
         store_maps=_load_store_maps(),
         fixtures_dir=fixtures_dir,
+        chaos_version=_chaos_version(os.getenv("SVERSE_CHAOS_VERSION")),
+        chaos_admin_token=os.getenv("SVERSE_CHAOS_ADMIN_TOKEN", "").strip(),
+        heal_poll_interval_s=_clamped(
+            "SVERSE_HEAL_POLL_INTERVAL_S", _float("SVERSE_HEAL_POLL_INTERVAL_S", 5.0), 1.0, 5.0
+        ),
+        heal_timeout_s=_clamped(
+            "SVERSE_HEAL_TIMEOUT_S", _float("SVERSE_HEAL_TIMEOUT_S", 600.0), 10.0, 600.0
+        ),
     )
 
 

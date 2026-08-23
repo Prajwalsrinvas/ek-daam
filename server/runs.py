@@ -25,6 +25,13 @@ from pydantic import BaseModel, Field
 from .bd_client import BDError, build_client
 from .config import Settings
 from .events import Event, EventStore, EventType, read_events_file, utc_now_iso
+from .heal import (
+    DEFAULT_CUSTOM_INPUT,
+    HealClient,
+    HealError,
+    run_heal_cycle,
+    validate_prompt,
+)
 from .mappers import (
     as_records,
     get_mapper,
@@ -251,6 +258,12 @@ class RunManager:
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._replay_tasks: dict[str, asyncio.Task[None]] = {}
         self._replay_owner: dict[str, str] = {}
+        # Self-heal runs. Like replays they call no collector and spend no
+        # scrape credits, so they never hold the single live slot. They ARE
+        # capped at one at a time: Bright Data allows three concurrent AI jobs
+        # per account and a second heal of the same collector has nothing to
+        # heal that the first is not already changing.
+        self._heal_tasks: dict[str, asyncio.Task[None]] = {}
         self._rows: dict[str, dict[str, list[NormalizedRow]]] = {}
         self._rate: dict[str, deque[float]] = defaultdict(deque)
         self._last_run_at: dict[str, float] = {}
@@ -326,7 +339,11 @@ class RunManager:
         if excess <= 0:
             return
         for run_id in list(self._metas)[:excess]:
-            task = self._tasks.get(run_id) or self._replay_tasks.get(run_id)
+            task = (
+                self._tasks.get(run_id)
+                or self._replay_tasks.get(run_id)
+                or self._heal_tasks.get(run_id)
+            )
             if task is not None and not task.done():
                 continue
             self._metas.pop(run_id, None)
@@ -335,6 +352,7 @@ class RunManager:
             self._tasks.pop(run_id, None)
             self._replay_tasks.pop(run_id, None)
             self._replay_owner.pop(run_id, None)
+            self._heal_tasks.pop(run_id, None)
 
     def _validate_request(self, query: str, pincode: str) -> tuple[str, str]:
         """Open inputs: any Indian pincode, any sane query.
@@ -775,6 +793,120 @@ class RunManager:
             self._write_meta(meta)
             await store.close()
 
+    # -- self-heal -------------------------------------------------------
+    def _active_heals(self) -> int:
+        return sum(1 for task in self._heal_tasks.values() if not task.done())
+
+    def start_heal(
+        self,
+        prompt: str | None = None,
+        custom_input: list[dict[str, Any]] | None = None,
+        universe_id: str = "chaos",
+        client: Any | None = None,
+    ) -> RunMeta:
+        """Repair one collector through Bright Data self-healing, as a run.
+
+        A heal gets a run of its own so the cycle leaves the same kind of record
+        a search does: an append-only event file, an SSE stream while it happens,
+        and a directory that can be read afterwards. It spends no scrape credits
+        and takes no part in the live-run slot.
+        """
+        collector_id = collector_id_for(self.settings, universe_id)
+        if not collector_id:
+            raise RunRejected(
+                f"no collector id is configured for {universe_id!r}, so there is nothing to heal"
+            )
+        if self._active_heals() >= 1:
+            raise RunThrottled("a self-heal is already running - wait for it to finish")
+
+        try:
+            checked_prompt = validate_prompt(prompt)
+        except HealError as exc:
+            raise RunRejected(str(exc)) from exc
+
+        inputs = custom_input if custom_input is not None else DEFAULT_CUSTOM_INPUT
+        if client is None:
+            try:
+                client = HealClient(self.settings)
+            except HealError as exc:
+                raise RunRejected(f"cannot start a self-heal: {exc}") from exc
+
+        run_id = _new_run_id("r")
+        run_dir = self.settings.runs_dir / run_id
+        store = EventStore(run_id, run_dir)
+        meta = RunMeta(
+            run_id=run_id,
+            query=f"self-heal: {universe_id} collector",
+            pincode="",
+            area_label="",
+            mode=self.settings.bd_mode,
+            created_at=utc_now_iso(),
+            universes=[universe_id],
+        )
+        self._stores[run_id] = store
+        self._metas[run_id] = meta
+        self._rows[run_id] = {}
+        self._write_meta(meta)
+
+        self._heal_tasks[run_id] = asyncio.create_task(
+            self._drive_heal(store, meta, client, collector_id, checked_prompt, inputs, universe_id)
+        )
+        self._prune_memory()
+        return meta
+
+    async def _drive_heal(
+        self,
+        store: EventStore,
+        meta: RunMeta,
+        client: Any,
+        collector_id: str,
+        prompt: str,
+        custom_input: list[dict[str, Any]],
+        universe_id: str,
+    ) -> None:
+        try:
+            async with asyncio.timeout(self.settings.heal_timeout_s):
+                await run_heal_cycle(
+                    store,
+                    self.settings,
+                    client,
+                    collector_id,
+                    prompt,
+                    custom_input,
+                    universe=universe_id,
+                )
+            await store.append(
+                EventType.DONE,
+                {"universes": [universe_id], "rows_total": 0, "groups": 0, "unmatched": 0},
+            )
+            meta.status = "done"
+        except asyncio.CancelledError:
+            meta.status = "cancelled"
+            raise
+        except TimeoutError:
+            await store.append(
+                EventType.TIMED_OUT,
+                {"after_s": self.settings.heal_timeout_s},
+                universe=universe_id,
+            )
+            await store.append(EventType.TIMED_OUT, {"after_s": self.settings.heal_timeout_s})
+            meta.status = "timed_out"
+        except Exception as exc:
+            # Twice on purpose, and they say different things: the universe-level
+            # line is why THIS collector was not repaired, the run-level one ends
+            # the run so the UI stops waiting. Neither is a guess: both carry the
+            # same message Bright Data or this app produced.
+            error = _terse_error(exc)
+            await store.append(EventType.FAILED, {"error": error}, universe=universe_id)
+            await store.append(EventType.FAILED, {"error": error})
+            meta.status = "failed"
+        finally:
+            meta.finished_at = utc_now_iso()
+            self._write_meta(meta)
+            with contextlib.suppress(Exception):
+                await client.aclose()
+            await store.close()
+
     # -- reads -----------------------------------------------------------
     def read_dir(self, run_id: str) -> Path | None:
         """Where a stored run lives.
@@ -900,7 +1032,11 @@ class RunManager:
         return candidate
 
     async def shutdown(self) -> None:
-        tasks = list(self._tasks.values()) + list(self._replay_tasks.values())
+        tasks = (
+            list(self._tasks.values())
+            + list(self._replay_tasks.values())
+            + list(self._heal_tasks.values())
+        )
         for task in tasks:
             if not task.done():
                 task.cancel()
