@@ -43,7 +43,8 @@ class EventType(StrEnum):
     LLM_MATCH = "llm_match"
     DONE = "done"
 
-    # Reserved for the self-healing pass — defined now, not implemented.
+    # The self-healing pass. The four heal_* events are emitted by
+    # server/heal.py; `incident` is still reserved — defined, never emitted.
     INCIDENT = "incident"
     HEAL_STARTED = "heal_started"
     HEAL_PREVIEWED = "heal_previewed"
@@ -67,6 +68,10 @@ IMPLEMENTED_EVENT_TYPES = frozenset(
         EventType.TIMED_OUT,
         EventType.LLM_MATCH,
         EventType.DONE,
+        EventType.HEAL_STARTED,
+        EventType.HEAL_PREVIEWED,
+        EventType.HEAL_APPROVED,
+        EventType.HEAL_PROMOTED,
     }
 )
 

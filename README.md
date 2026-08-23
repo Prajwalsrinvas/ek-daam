@@ -2,6 +2,24 @@
 
 ![EkDaam comparing one product across four universes at one pincode](docs/hero.png)
 
+**[Watch the demo](https://youtu.be/lyB69pgtWZ8)** (2 min 48 s): a live crawl
+across all four universes, the receipt, the store flip, and a real Bright Data
+self-heal, end to end. The same video is committed at
+[docs/demo.mp4](docs/demo.mp4).
+
+<details>
+<summary><strong>Screenshots</strong>: the landing, a live run, the receipt, the two chaos DOMs, the break, the heal</summary>
+<br>
+
+| | |
+| --- | --- |
+| ![The landing: a curated demo strip and four universes](docs/shots/landing.png) *The landing: watch a demo, or run one live* | ![A live run, all four universes proved](docs/shots/live-run.png) *A live run: every universe proves the pincode; the watchdog pill shows a rescued job* |
+| ![The receipt with rule-based paylines](docs/shots/receipt.png) *The receipt: solid paylines, cheapest cell lit, labels say close, never exact* | ![Model-suggested groups drawn as dashed lines](docs/shots/model-matches.png) *Model-suggested matches: dashed, labelled with confidence, never mixed into the rules* |
+| ![The same chaos catalogue rendered two ways](docs/shots/two-doms.png) *One catalogue, two DOMs: the table and the card grid* | ![The chaos collector finds nothing after the flip](docs/shots/broken.png) *After the flip: the chaos collector is blind, the other three unaffected* |
+| ![The self-heal stages streamed into the run feed](docs/shots/self-heal.png) *The self-heal replay: plan, preview, approve, promote, published to production* | ![The healed collector reads the redesigned store](docs/shots/healed-run.png) *Healed: the same collector reads the new DOM, rows are back* |
+
+</details>
+
 EkDaam compares grocery shelf prices across Zepto, Blinkit and Instamart for one
 product and pincode. A fourth universe is a demo store the app serves itself,
 built to break on purpose so a collector can be broken and self-healed while you
@@ -95,6 +113,15 @@ watch on demand. Rows from this store are shown under their own heading and
 never matched against the live universes, because its products and prices are
 invented.
 
+```mermaid
+flowchart LR
+  F[flip the markup] --> X[collector finds zero rows]
+  X --> H[POST /api/chaos/heal]
+  H --> BD[Bright Data rewrites the template against the new page]
+  BD -->|save confirmed| P[promoted to production]
+  P --> OK[rows back]
+```
+
 `./chaos-monkey.sh` prints the version being served and flips it to the next
 one. Add `--heal` to start a self-heal run instead and print its run id. It
 reads `CHAOS_ADMIN_TOKEN` from the environment and takes `EKDAAM_URL` for a
@@ -171,13 +198,22 @@ same browser are listed under **My runs**, each with its own replay button.
 
 ## How it works
 
-```text
-Browser
-  -> FastAPI API
-  -> Bright Data Scraper Studio collectors
-  -> normalized rows and location checks
-  -> deterministic product grouping
-  -> SSE event feed and comparison table
+```mermaid
+flowchart LR
+  B[browser] -->|product + pincode| API[FastAPI]
+  API --> Z[Zepto collector]
+  API --> K[Blinkit collector]
+  API --> I[Instamart collector]
+  API --> C[ChaosMart collector]
+  Z & K & I & C -->|rows + resolved location| V{site echoes the pincode?}
+  V -->|no| D[row dropped]
+  V -->|yes, real shops| G[rule-based grouping]
+  V -->|yes, ChaosMart| S[shown separately, never grouped]
+  S --> R[receipt]
+  G --> R
+  G --> M[model-suggested pairs]
+  M -. dashed, re-checked by the rules .-> R
+  API -->|SSE events| B
 ```
 
 The backend is a single FastAPI process. Runs are stored as JSON and JSONL

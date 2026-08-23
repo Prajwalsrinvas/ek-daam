@@ -10,6 +10,7 @@ import MyRuns from "./components/MyRuns";
 import PortalDeck from "./components/PortalDeck";
 import Receipt from "./components/Receipt";
 import TopBar, { type Tab } from "./components/TopBar";
+import Guide from "./components/Guide";
 import { emptyRunState } from "./runState";
 import type { Cart, DemoEntry, RunMeta, Universe } from "./types";
 import { EMPTY_COMPARISON, useRunStreams } from "./useRunStream";
@@ -58,6 +59,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [recorderOpen, setRecorderOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const streams = useRunStreams(viewing.runIds);
   const lanes = useMemo(
@@ -214,7 +216,8 @@ export default function App() {
   return (
     <div className="min-h-full">
       <div className="mx-auto max-w-[1440px] px-6 pb-16 lg:pr-16">
-        <TopBar tab={tab} onTab={setTab} mode={first?.state.mode ?? serverMode} pincode={first?.state.pincode ?? null} replay={anyReplay} />
+        <TopBar tab={tab} onTab={setTab} onGuide={() => setGuideOpen(true)} mode={first?.state.mode ?? serverMode} pincode={first?.state.pincode ?? null} replay={anyReplay} />
+        <Guide open={guideOpen} onClose={() => setGuideOpen(false)} />
 
         <div className="space-y-3 pb-5">
           {tab === "demo" ? (
@@ -336,9 +339,19 @@ export default function App() {
           style={{ borderTop: "1px solid var(--hair)" }}
         >
           <span>EkDaam · shelf prices read at one pincode, nothing invented</span>
-          <a href="/chaos" target="_blank" rel="noreferrer noopener" className="link">
-            open the demo store this app breaks and repairs on purpose
-          </a>
+          <span className="flex flex-wrap items-center gap-4">
+            <a
+              href="https://github.com/Prajwalsrinvas/ek-daam"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="link"
+            >
+              code on GitHub
+            </a>
+            <a href="/chaos" target="_blank" rel="noreferrer noopener" className="link">
+              open the demo store this app breaks and repairs on purpose
+            </a>
+          </span>
         </footer>
       </div>
 

@@ -6,12 +6,15 @@ export type Tab = "demo" | "live";
 export default function TopBar({
   tab,
   onTab,
+  onGuide,
   mode,
   pincode,
   replay,
 }: {
   tab: Tab;
   onTab: (tab: Tab) => void;
+  /** Opens the "what is this?" guide modal. */
+  onGuide: () => void;
   mode: string;
   /** The pincode of the run currently on screen, or null when none is. */
   pincode: string | null;
@@ -25,7 +28,11 @@ export default function TopBar({
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
       <div className="min-w-0">
-        <h1 className="wordmark">EKDAAM</h1>
+        <h1 className="wordmark">
+          <a href="/" className="text-inherit no-underline" title="back to the start">
+            EKDAAM
+          </a>
+        </h1>
         <p className="kicker mt-1.5 text-[var(--text-dim)]">
           one product, every universe, one pincode
         </p>
@@ -41,6 +48,9 @@ export default function TopBar({
       </div>
 
       <div className="mono flex items-center gap-3 text-[12px]">
+        <button type="button" className="link" onClick={onGuide}>
+          what is this?
+        </button>
         {pincode && (
           <span style={{ color: "var(--text-dim)" }}>
             pincode <span style={{ color: "var(--text)" }}>{pincode}</span>

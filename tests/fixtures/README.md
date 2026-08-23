@@ -99,8 +99,9 @@ right:
 | Nutralite (ads widget) | sponsored slot, product node nested one level deeper |
 | Heritage Table Butter | `sellingPrice: 0` — dropped by the validation gate |
 
-Every row carries a `zeptoPassPrice` and a `superSaverSellingPrice` that are
-**lower** than `sellingPrice`. Nothing in the app may ever report them; the mapper
+Every valid row carries a `zeptoPassPrice` and a `superSaverSellingPrice` that
+are **lower** than `sellingPrice` (the deliberately invalid Heritage row is the
+exception). Nothing in the app may ever report them; the mapper
 test asserts that no emitted price matches one of those values. The real capture
 happened to have `zeptoPassPrice: 0` throughout, which would have made that test
 vacuous, so the fixture uses realistic member prices instead.
@@ -173,7 +174,7 @@ captured replay as provenance.
 | 13 rows with `out_of_stock: true` | out-of-stock rows are kept, priced, and pass the validation gate |
 | every row | `available_quantity` null — Instamart publishes no stock count, and null is not zero |
 | last row | `eta_minutes` null, inheriting the dataset's |
-| row 3 only | the SERP capture, so the any-row handling is exercised |
+| row 4 only | the SERP capture, so the any-row handling is exercised |
 
 That SERP capture is a Bright Data **file object**, and it is why
 `extract_screenshot_url` refuses one. The object carries a `url` — but it is

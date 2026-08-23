@@ -21,7 +21,7 @@ Endpoint shapes below are taken from the Bright Data docs, not guessed:
        Stops a job that is still queued or running. Confirmed against a live
        job that had been running for 319s.
 
-`LiveClient` and `MockClient` implement the same three calls plus the screenshot
+`LiveClient` and `MockClient` implement the same four calls plus the screenshot
 fetch, so `runs.py` is byte-for-byte identical in both modes. Flipping BD_MODE
 requires zero code changes, which is the whole point of the seam.
 """

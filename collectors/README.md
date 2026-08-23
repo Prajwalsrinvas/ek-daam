@@ -101,7 +101,9 @@ Rows are built in the *interaction*, not the parser, for a Studio reason worth
 knowing: tag values are auto-injected into `parse()`'s **return value** as
 `<field>` and `<field>_url`, and `parser.<field>` never populates during a live
 run. The parsers therefore stay thin - they hand back DOM facts (`resolved_area`,
-`page_eta`, hydration marker counts) and nothing else.
+`page_eta` on Blinkit and Instamart, `eta_minutes` on Zepto, hydration marker
+counts) and nothing else on the live path. Zepto's parser also keeps a full
+`products` fallback for the offline harness, which the live run never uses.
 
 ## Studio functions used
 
