@@ -1,3 +1,4 @@
+import { hueInk } from "../format";
 import { useMemo } from "react";
 
 import { cheapestPrice, money } from "../format";
@@ -85,7 +86,7 @@ export default function BasketBar({
               className="min-w-0 px-2 py-1"
               style={{ borderLeft: `2px solid ${universe.color}` }}
             >
-              <div className="kicker truncate" style={{ color: universe.color }}>
+              <div className="kicker truncate" style={{ color: hueInk(universe.color) }}>
                 {universe.display}
               </div>
               <div className="mt-0.5 flex items-baseline gap-2">

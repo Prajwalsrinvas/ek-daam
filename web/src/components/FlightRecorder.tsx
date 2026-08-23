@@ -68,7 +68,7 @@ export default function FlightRecorder({
         onClick={() => onOpenChange(false)}
         className="fixed inset-0 z-30"
         style={{
-          background: "rgba(4,6,12,.5)",
+          background: "rgba(21,26,38,.35)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
           transition: "opacity 220ms ease",
@@ -84,7 +84,7 @@ export default function FlightRecorder({
           background: "var(--ink-2)",
           borderLeft: "1px solid var(--hair)",
           transform: open ? "translateX(0)" : "translateX(101%)",
-          boxShadow: open ? "-24px 0 60px -30px rgba(0,0,0,.9)" : "none",
+          boxShadow: open ? "-24px 0 60px -30px rgba(21,26,38,.45)" : "none",
         }}
       >
         <header

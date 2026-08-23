@@ -72,3 +72,10 @@ export function byPriceAscending(a: NormalizedRow, b: NormalizedRow): number {
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
+
+/** A universe's hue as TEXT on the light deck. Blinkit's yellow is unreadable
+ *  as-is on a pale surface, so every hue is pulled a third of the way to ink;
+ *  fills and rings keep the raw hue. */
+export function hueInk(color: string): string {
+  return `color-mix(in srgb, ${color} 68%, #151a26)`;
+}

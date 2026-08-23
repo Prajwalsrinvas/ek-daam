@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 /* EkDaam's design tokens. Two surfaces and nothing in between: the DECK is the
-   dark band where four collectors are working, the PAPER is the light band where
-   the receipt is printed. A colour that means a state (ok / bad / warn) is never
+   cool, light band where four collectors are working, the PAPER is the warm
+   band where the receipt is printed. A colour that means a state (ok / bad / warn) is never
    used for decoration, and a universe's hue always comes from the registry
    (`universe.color`), never from this file. */
 :root {
-  --ink: #0b0f1a;
-  --ink-2: #121828;
-  --hair: rgba(230, 233, 242, 0.14);
-  --text: #e6e9f2;
-  --text-dim: #8a92a8;
+  --ink: #eef0f4;
+  --ink-2: #ffffff;
+  --hair: rgba(21, 26, 38, 0.16);
+  --text: #151a26;
+  --text-dim: #5b6271;
 
   --paper: #f6f3ec;
   --paper-2: #fffdf7;
@@ -118,8 +118,8 @@ input {
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .ctl:hover:not(:disabled) {
-  background: rgba(230, 233, 242, 0.07);
-  border-color: rgba(230, 233, 242, 0.32);
+  background: rgba(21, 26, 38, 0.07);
+  border-color: rgba(21, 26, 38, 0.32);
 }
 .ctl:disabled {
   opacity: 0.38;
@@ -127,14 +127,14 @@ input {
 }
 .ctl-strong {
   background: var(--text);
-  color: var(--ink);
+  color: var(--ink-2);
   border-color: var(--text);
   font-weight: 600;
 }
 .ctl-strong:hover:not(:disabled) {
-  background: #fff;
-  border-color: #fff;
-  color: var(--ink);
+  background: #2a3142;
+  border-color: #2a3142;
+  color: var(--ink-2);
 }
 
 .seg {
@@ -161,16 +161,16 @@ input {
 }
 
 .field {
-  background: #0a0e18;
+  background: #ffffff;
   border: 1px solid var(--hair);
   color: var(--text);
   padding: 7px 10px;
 }
 .field::placeholder {
-  color: #5d6478;
+  color: #8a92a8;
 }
 .field:focus {
-  border-color: rgba(230, 233, 242, 0.4);
+  border-color: rgba(21, 26, 38, 0.4);
 }
 
 .chip {
@@ -178,7 +178,7 @@ input {
   align-items: center;
   gap: 6px;
   border: 1px solid var(--hair);
-  background: rgba(230, 233, 242, 0.05);
+  background: rgba(21, 26, 38, 0.05);
   padding: 4px 6px 4px 9px;
   font-size: 13px;
 }
@@ -239,13 +239,13 @@ input {
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(230, 233, 242, 0.22) transparent;
+  scrollbar-color: rgba(21, 26, 38, 0.22) transparent;
 }
 .shelf::-webkit-scrollbar {
   width: 8px;
 }
 .shelf::-webkit-scrollbar-thumb {
-  background: rgba(230, 233, 242, 0.22);
+  background: rgba(21, 26, 38, 0.22);
 }
 
 .shelf-row {

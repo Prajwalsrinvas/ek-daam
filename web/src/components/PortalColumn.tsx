@@ -1,3 +1,4 @@
+import { hueInk } from "../format";
 import { byPriceAscending, fillSearchUrl, money, plural, siteName, unitPriceLabel } from "../format";
 import type { HealState, UniverseState } from "../runState";
 import { HEAL_STEPS } from "../runState";
@@ -130,7 +131,7 @@ function Thumb({ row }: { row: NormalizedRow }) {
     return (
       <div
         className="h-10 w-10 shrink-0 border"
-        style={{ borderColor: "var(--hair)", background: "rgba(230,233,242,.04)" }}
+        style={{ borderColor: "var(--hair)", background: "rgba(21,26,38,.04)" }}
       />
     );
   }
@@ -253,7 +254,7 @@ export default function PortalColumn({
             count={state?.rowsKept ?? state?.rows ?? null}
           />
           <div className="min-w-0 flex-1">
-            <h3 className="display truncate text-[15px]" style={{ color: universe.color }}>
+            <h3 className="display truncate text-[15px]" style={{ color: hueInk(universe.color) }}>
               {universe.display}
             </h3>
             <p className="kicker mt-1" style={{ color: TONE_COLOR[reading.tone] }}>

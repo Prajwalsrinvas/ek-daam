@@ -1,3 +1,4 @@
+import { hueInk } from "../format";
 import { cheapestPrice, groupLabel, money } from "../format";
 import type { ComparisonGroup, NormalizedRow, Universe } from "../types";
 
@@ -47,7 +48,7 @@ function Cell({
           : { background: "transparent" }
       }
     >
-      <div className="kicker only-narrow mb-0.5" style={{ color: lit ? "var(--paper)" : universe.color }}>
+      <div className="kicker only-narrow mb-0.5" style={{ color: lit ? "var(--paper)" : hueInk(universe.color) }}>
         {universe.display}
       </div>
       <div className="flex items-baseline gap-2">

@@ -1,3 +1,4 @@
+import { hueInk } from "../format";
 import { useMemo } from "react";
 
 import { byPriceAscending, money, plural, unitPriceLabel } from "../format";
@@ -55,7 +56,7 @@ function ByUniverse({ rows, universes }: { rows: NormalizedRow[]; universes: Uni
         const mine = rows.filter((row) => row.universe === universe.id).sort(byPriceAscending);
         return (
           <div key={universe.id} className="min-w-0">
-            <h4 className="kicker pb-1" style={{ color: universe.color }}>
+            <h4 className="kicker pb-1" style={{ color: hueInk(universe.color) }}>
               {universe.display} · {plural(mine.length, "listing")}
             </h4>
             <ul>
@@ -228,7 +229,7 @@ export default function Receipt({
                 <div
                   key={universe.id}
                   className="kicker px-2"
-                  style={{ color: universe.color }}
+                  style={{ color: hueInk(universe.color) }}
                 >
                   {universe.display}
                 </div>
