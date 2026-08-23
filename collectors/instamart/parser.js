@@ -1,30 +1,30 @@
-// INSTAMART v1 parser — THIN, B12/blinkit-parser style. It deliberately does NOT read
+// INSTAMART v1 parser - THIN, B12/blinkit-parser style. It deliberately does NOT read
 // `parser.<tag>` for data: tag values never populate there live. Its only
 // job is to hand the interaction cheap DOM facts; parse()'s RETURN carries these keys PLUS the
 // auto-injected tag fields (search_api, search_p2, search_api_any, serp_screenshot + _url).
-// Never name a returned key after a tag field — the injection overwrites same-named keys.
+// Never name a returned key after a tag field - the injection overwrites same-named keys.
 let dbg_probe = 'ok';
 try { new Money(1, 'INR'); } catch (eP1) { dbg_probe = 'MONEY_FAIL'; }
 try { new Image('https://x/y.png'); } catch (eP2) { dbg_probe = dbg_probe + '|IMAGE_FAIL'; }
-// Diagnostic only — kept to keep proving that on Instamart. Nothing below depends on it.
+// Diagnostic only - kept to keep proving that on Instamart. Nothing below depends on it.
 let sa_sniff = 'undef';
 try { const sa0 = parser.search_api; if (sa0 === null) { sa_sniff = 'null'; } else if (sa0 !== undefined) { sa_sniff = (typeof sa0) + ':' + (typeof sa0 === 'string' ? sa0.slice(0, 40) : Object.keys(sa0 || {}).slice(0, 6).join(',')); } } catch (eS0) { sa_sniff = 'SNIFF_ERR'; }
 
 let body_text = '';
 try { body_text = $('body').text() || ''; } catch (eB) { body_text = ''; }
 // resolved_area = the Instamart header, "<n> mins Delivery to <pincode>, <street>, ...".
-// The SERP may not carry it — the interaction reads it post-confirm too.
+// The SERP may not carry it - the interaction reads it post-confirm too.
 let resolved_area = null;
 try { const m = body_text.match(/Delivery to[\s\S]{0,110}/i); if (m) { resolved_area = m[0].replace(/\s+/g, ' ').trim().slice(0, 140); } } catch (eR) { resolved_area = null; }
 if (resolved_area === null) { try { const pc = input.pincode; if (pc) { const m2 = body_text.match(new RegExp('[\\s\\S]{0,50}' + pc + '[\\s\\S]{0,80}')); if (m2) { resolved_area = m2[0].replace(/\s+/g, ' ').trim().slice(0, 140); } } } catch (eR2) { resolved_area = null; } }
-// page-level ETA — prefer the minutes printed right before "Delivery to"; per-row podId SLAs from
+// page-level ETA - prefer the minutes printed right before "Delivery to"; per-row podId SLAs from
 // the API payload override this in the row build.
 let page_eta = null;
 try { const w = body_text.match(/(\d+)\s*mins?\b[\s\S]{0,25}Delivery to/i); if (w) { page_eta = parseInt(w[1], 10); } } catch (eE) { page_eta = null; }
 if (page_eta === null) { try { const e2 = body_text.match(/(\d+)\s*mins?\b/i); if (e2) { page_eta = parseInt(e2[1], 10); } } catch (eE2) { page_eta = null; } }
 
 // Hydration / control marker counts + text-anchor presence. These are what the diag run reads to
-// confirm or replace every UNVERIFIED selector in the interaction. No `i` attribute flags here —
+// confirm or replace every UNVERIFIED selector in the interaction. No `i` attribute flags here -
 // cheerio's css-select is stricter than the browser.
 const cnt = (sel) => { try { const n = $(sel); return (n && n.length) ? n.length : 0; } catch (eC) { return 0; } };
 const has = (t) => { try { return body_text.toLowerCase().indexOf(String(t).toLowerCase()) > -1; } catch (eH) { return false; } };

@@ -3,10 +3,12 @@
 ![EkDaam comparing one product across four universes at one pincode](docs/hero.png)
 
 EkDaam compares grocery shelf prices across Zepto, Blinkit, and Instamart for one
-product and pincode. Each search runs through Bright Data Scraper Studio, streams
-progress to the browser, and builds a comparison from the returned listings.
+product and pincode. A fourth universe is a demo store this app serves itself,
+included so a collector can be broken and self-healed while somebody watches. Each
+search runs through Bright Data Scraper Studio, streams progress to the browser,
+and builds a comparison from the returned listings.
 
-Built for the Bright Data hackathon.
+Built for Into the Scrape-Verse, the hackathon run by WeMakeDevs with Bright Data.
 
 ## What it does
 
@@ -46,7 +48,7 @@ uv run uvicorn server.app:app --port 8000
 Open <http://127.0.0.1:8000>.
 
 The default `BD_MODE=mock` uses a local Zepto fixture and makes no network calls.
-For a three-site comparison, configure live mode.
+For live comparisons, configure live mode.
 
 ## Live mode
 
@@ -58,15 +60,32 @@ BD_API_KEY=
 SVERSE_COLLECTOR_ZEPTO=
 SVERSE_COLLECTOR_BLINKIT=
 SVERSE_COLLECTOR_INSTAMART=
+SVERSE_COLLECTOR_CHAOS=
 SVERSE_COLLECTOR_VERSION=prod
+SVERSE_CHAOS_VERSION=v1
+SVERSE_CHAOS_ADMIN_TOKEN=
+SVERSE_DEMO_RUN_ID=
 ```
+
+`SVERSE_COLLECTOR_CHAOS` is the demo store's collector; leave it empty and that
+universe reports "not wired" and takes no part in a run.
+`SVERSE_CHAOS_VERSION` is the rendering the demo store starts on, changed at
+runtime only through `POST /api/chaos/flip`.
+`SVERSE_CHAOS_ADMIN_TOKEN` is the shared secret for the two chaos admin
+endpoints, sent as the `X-Chaos-Token` header; empty means disabled, and both
+endpoints answer 503.
+`SVERSE_DEMO_RUN_ID` names the one run id that is readable and replayable by
+anyone; empty means there is no public run and the UI offers no demo button.
 
 Collector IDs and API keys stay in the environment. The collector source used by
 the app is included in [`collectors/`](collectors/README.md).
 
 After a run completes, click **Replay this run** to stream its saved events again.
 Replay runs are visibly labelled and do not call Bright Data. Past runs from the
-same browser are listed under **My runs**, each with its own replay button.
+same browser are listed under **My runs**, each with its own replay button. One
+run can be published to every visitor by naming it in `SVERSE_DEMO_RUN_ID`: while
+that is set, the landing state offers a **Replay the demo capture** button that
+needs no run of your own.
 
 ## The chaos store
 
@@ -86,7 +105,7 @@ than the default.
 Scraper Studio is the whole data layer. The app has no scraping code of its own. Four collectors run per search: three in production against Zepto, Blinkit and Instamart, and one against a demo store served by this app that is built to break on purpose.
 
 - Typed inputs, not URLs. Every collector takes `{keyword, pincode}` and nothing else. The shelf does not exist at a URL; it exists only after a location is set in the session.
-- Location choreography in the Browser worker. Each production collector opens the app, types the pincode into the site's own location picker, picks a suggestion, and reads the pincode back from the site header before it searches. A row only counts if the site's own resolved area echoes the requested pincode.
+- Location choreography in the Browser worker. Each production collector opens the app, types the pincode into the site's own location picker, picks a suggestion, and reads back the location text the site itself resolved before it searches. A row only counts if that resolved-location text echoes the requested pincode.
 - The site's own JSON, not class names. After the bind, `tag_response` captures the search endpoint each app calls for itself, and the parser reads that payload. Hashed class names rotate; the API contract does not.
 - One output contract. All four collectors emit the same 18 fields with the same types, so the app has one mapper and one comparison.
 - The REST loop. The app triggers with `POST /dca/trigger`, follows `GET /dca/log/{job}` for progress, fetches `GET /dca/dataset`, and cancels and retriggers a job that never starts navigating.
@@ -114,6 +133,9 @@ The collectors accept a product keyword and six-digit Indian pincode. Each site
 resolves the pincode through its own location picker. A row is included only when
 the returned location text contains the requested pincode.
 
+DESIGN.md is the internal design document the module docstrings cite by section
+number. It is kept out of the published repository.
+
 ## API
 
 | Method | Path | Purpose |
@@ -124,6 +146,12 @@ the returned location text contains the requested pincode.
 | `GET` | `/api/runs/{id}` | Read a run and its comparison |
 | `GET` | `/api/runs/{id}/events` | Stream run events over SSE |
 | `POST` | `/api/replays/{id}` | Replay a completed run |
+| `GET` | `/api/chaos` | Demo store rendering and admin state |
+| `POST` | `/api/chaos/flip` | Switch the demo store rendering (token, header `X-Chaos-Token`) |
+| `POST` | `/api/chaos/heal` | Start a self-heal run for the chaos collector (token, header `X-Chaos-Token`) |
+| `GET` | `/chaos` | The demo store itself |
+| `GET` | `/chaos/search` | Demo store search results |
+| `GET` | `/chaos/product/{id}` | A demo store product page |
 
 ## Data and privacy
 

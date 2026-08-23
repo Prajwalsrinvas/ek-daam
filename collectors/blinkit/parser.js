@@ -1,12 +1,12 @@
-// BLINKIT v1 parser — THIN, B12/zepto-unified-parser style. It deliberately does NOT read
+// BLINKIT v1 parser - THIN, B12/zepto-unified-parser style. It deliberately does NOT read
 // `parser.<tag>` for data: tag values never populate there live. Its
 // only job is to hand the interaction cheap DOM facts; parse()'s RETURN carries these keys
 // PLUS the auto-injected tag fields (search_api, search_api_any, serp_screenshot + _url).
-// Never name a returned key after a tag field — the injection overwrites same-named keys.
+// Never name a returned key after a tag field - the injection overwrites same-named keys.
 let dbg_probe = 'ok';
 try { new Money(1, 'INR'); } catch (eP1) { dbg_probe = 'MONEY_FAIL'; }
 try { new Image('https://x/y.png'); } catch (eP2) { dbg_probe = dbg_probe + '|IMAGE_FAIL'; }
-// Diagnostic only — kept to keep proving that on Blinkit. Nothing below depends on it.
+// Diagnostic only - kept to keep proving that on Blinkit. Nothing below depends on it.
 let sa_sniff = 'undef';
 try { const sa0 = parser.search_api; if (sa0 === null) { sa_sniff = 'null'; } else if (sa0 !== undefined) { sa_sniff = (typeof sa0) + ':' + (typeof sa0 === 'string' ? sa0.slice(0, 40) : Object.keys(sa0 || {}).slice(0, 6).join(',')); } } catch (eS0) { sa_sniff = 'SNIFF_ERR'; }
 

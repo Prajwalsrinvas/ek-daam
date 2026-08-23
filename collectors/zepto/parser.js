@@ -1,5 +1,5 @@
 // ZEPTO parser. In the LIVE path the app consumes only `resolved_area` and
-// `eta_minutes` from this file, through parse()'s return value — the rows
+// `eta_minutes` from this file, through parse()'s return value - the rows
 // themselves are built in interaction.js from the tagged search payload.
 // The product walk below (rowOf / walk / the embedded-blob fallback) is the
 // OFFLINE-HARNESS path: it is what parses a saved payload outside a run. It

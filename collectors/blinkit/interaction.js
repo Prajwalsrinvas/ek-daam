@@ -1,9 +1,9 @@
-// BLINKIT v1 — B12-shaped (see ../zepto/interaction.js). Rows are built HERE, in the
+// BLINKIT v1 - B12-shaped (see ../zepto/interaction.js). Rows are built HERE, in the
 // interaction, from parse()'s RETURN value: tag values are auto-injected into parse()'s
 // return as <field> + <field>_url, and parser.<field> NEVER populates live.
-// collect() is called ONCE with an array. Only endpoints we CONSUME are tagged —
+// collect() is called ONCE with an array. Only endpoints we CONSUME are tagged -
 // a tagged endpoint returning a bad status kills the run.
-// Prices on Blinkit are RUPEES already — never /100 (that is a Zepto-only quirk).
+// Prices on Blinkit are RUPEES already - never /100 (that is a Zepto-only quirk).
 const keyword = input.keyword;
 const pincode = input.pincode;
 
@@ -22,18 +22,18 @@ const bkMoney = (v) => { const n = bkRupees(v); if (n === null) { return null; }
 const bkEta = (d, pageEta) => { try { const pb = (d && d.product_badges) || []; for (let bi = 0; bi < pb.length; bi++) { const b = pb[bi]; if (b && b.type === 'ETA') { const tx = (b.text_data && b.text_data.text) || ''; const mT = tx.match(/(\d+)\s*min/i); if (mT) { return parseInt(mT[1], 10); } const iu = (b.image_data && b.image_data.url) || ''; const mI = iu.match(/(\d+)-min/i); if (mI) { return parseInt(mI[1], 10); } } } const eu = (d && d.eta_tag && d.eta_tag.image && d.eta_tag.image.url) || ''; const mU = eu.match(/(\d+)-min/i); if (mU) { return parseInt(mU[1], 10); } } catch (eT) { } return pageEta; };
 const bkSponsored = (s) => { try { const ob = (s.data && s.data.overlay_badges) || []; for (let oi = 0; oi < ob.length; oi++) { const u = (ob[oi] && ob[oi].image && ob[oi].image.url) || ''; if (u.indexOf('assets/ui/ad') > -1) { return true; } } } catch (eO) { } try { if (JSON.stringify(s.tracking || {}).indexOf('ads_campaign_id') > -1) { return true; } } catch (eS) { } return false; };
 // 18-field contract, identical to Zepto B12 (BD auto-appends the job's `input` object to every
-// dataset row, so {keyword, pincode} rides along for free — no extra column needed. Those two
+// dataset row, so {keyword, pincode} rides along for free - no extra column needed. Those two
 // ARE the whole input: no coordinates are sent, because the pincode is typed into the site).
 const bkBuildRows = (root, ctx) => { const rows = []; const seen = {}; const sn = (root && root.snippets) || []; ctx.row_errors = 0; for (let i = 0; i < sn.length; i++) { const s = sn[i]; if (!s || !s.data || !/product_card_snippet/.test(s.widget_type || '')) { continue; } try { const d = s.data; const ci = bkCart(d); let id = (d.identity && d.identity.id) || (d.meta && d.meta.product_id) || (ci && ci.product_id !== undefined && ci.product_id !== null ? String(ci.product_id) : null); const nm = (d.name && d.name.text) || (ci && ci.product_name) || (d.display_name && d.display_name.text) || null; if (!id) { id = nm; } if (!id || seen[id]) { continue; } seen[id] = 1; const inv = (d.inventory !== undefined && d.inventory !== null) ? d.inventory : (ci ? ci.inventory : null); const sell = ci ? ci.price : bkRupees(d.normal_price && d.normal_price.text); let mrpV = ci ? ci.mrp : bkRupees(d.mrp && d.mrp.text); if (mrpV === undefined || mrpV === null) { mrpV = sell; } const rt = (d.rating && d.rating.bar && d.rating.bar.value !== undefined) ? d.rating.bar.value : null; rows.push({ product_name: nm, brand: (d.brand_name && d.brand_name.text) || (ci && ci.brand) || null, package_size: (d.variant && d.variant.text) || (ci && ci.unit) || null, product_id: String(id), mrp: bkMoney(mrpV), selling_price: bkMoney(sell), discounted_selling_price: bkMoney(sell), out_of_stock: (d.product_state === 'out_of_stock') || d.is_sold_out === true || inv === 0, available_quantity: (inv === undefined) ? null : inv, is_sponsored: bkSponsored(s), rating: rt, image_url: (d.image && d.image.url) || (ci && ci.image_url) || null, serp_screenshot: ctx.shot || null, store_id: bkMerchant(d), requested_pincode: ctx.pincode || null, resolved_area: ctx.resolved_area || null, eta_minutes: bkEta(d, ctx.page_eta), captured_at: ctx.captured_at }); } catch (eRow) { ctx.row_errors = ctx.row_errors + 1; } } return rows; };
 // ---8<--- ROWBUILD END
 
 // Both patterns hit the SAME endpoint (POST blinkit.com/v1/layout/search?...). Narrow first
 // (must carry a q= param, which the keyword SERP call always does, per the pagination next_url
-// in a captured response), broad second as the fallback — mirrors B12's search_api /
+// in a captured response), broad second as the fallback - mirrors B12's search_api /
 // search_api_any pair. No sibling Blinkit endpoint is known to need excluding; captures show
 // pagination reuses
 // this same path, so a lookahead exclusion would have nothing to exclude. UNVERIFIED.
-// Diag #1: last-match-wins CONFIRMED — the page-2 prefetch (offset=12) overwrote page 1.
+// Diag #1: last-match-wins CONFIRMED - the page-2 prefetch (offset=12) overwrote page 1.
 // So: page 1 = any layout/search call WITHOUT a non-zero offset (lookahead, B12-proven), page 2 tagged separately and merged.
 tag_response('search_api', /v1\/layout\/search\?(?![^"']*offset=[1-9])/);
 tag_response('search_p2', /v1\/layout\/search\?[^"']*offset=[1-9]/);
@@ -85,7 +85,7 @@ console.log('SEL location_button=' + locBtn);
 if (!modalOpen && locBtn === null) { blocked('location button not found'); }
 if (!modalOpen) { click(locBtn); wait_page_idle(); }
 
-// Dialog input. NEVER `input[type="text"]` and never a bare placeholder*="Search" — both
+// Dialog input. NEVER `input[type="text"]` and never a bare placeholder*="Search" - both
 // matched the PRODUCT search box on Zepto and typed the pincode into it.
 let pinInput = null;
 if (el_exists('input[placeholder*="delivery location" i]', 15000)) { pinInput = 'input[placeholder*="delivery location" i]'; }
@@ -147,7 +147,7 @@ console.log('POST_BIND SNIPPETS=' + (root ? root.snippets.length : 0) + ' STORE=
 
 // Re-navigate when the payload is missing OR still looks pre-bind (same merchant as before the
 // bind). UNVERIFIED #4: whether Blinkit refetches the SERP on bind at all. Costs 1 extra load
-// when it fires; if the pre/post merchant legitimately matches this burns a load for nothing —
+// when it fires; if the pre/post merchant legitimately matches this burns a load for nothing -
 // watch STORE= in the log and drop the `stale` half of the condition if that happens.
 const stale = (root !== null) && (preStore !== null) && (store1 === preStore);
 if (root === null || stale) { console.log('REFRESH_NAVIGATE stale=' + stale); navigate('https://blinkit.com/s/?q=' + encodeURIComponent(keyword)); const hyd3 = el_exists('div[role="button"][id]', 20000) || el_exists('[class*="Product"]', 3000); console.log('HYDRATION_MARKER3=' + hyd3); wait_network_idle({timeout: 1500, ignore: [/^blob:/, /^(?!https?:\/\/([a-z0-9-]+\.)*blinkit\.com\/)/i, /analytics|telemetry|metrics|\/events?\b|\/track|sentry|faro/i]}); try { wait_for_parser_value('search_api', {timeout: 15000}); console.log('WFPV3=ok'); } catch (eW3) { console.log('WFPV3=timeout'); } out = parse(); root = bkNorm(out.search_api); if (root === null) { root = bkNorm(out.search_api_any); } store1 = bkFirstStore(root); console.log('POST_REFRESH SNIPPETS=' + (root ? root.snippets.length : 0) + ' STORE=' + store1); }

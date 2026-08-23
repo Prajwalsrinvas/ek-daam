@@ -1,10 +1,10 @@
-// INSTAMART v1.3 (bad-draw dump + one reload; v1.2 robust probes after slow draws; v1.1 speed: all wait_network_idle removed — Swiggy never idles, each call hit BD's 30 s cap = 150 s/run) — B12-shaped, copied line-for-line from ../blinkit/interaction.js where the logic is
+// INSTAMART v1.3 (bad-draw dump + one reload; v1.2 robust probes after slow draws; v1.1 speed: all wait_network_idle removed - Swiggy never idles, each call hit BD's 30 s cap = 150 s/run) - B12-shaped, copied line-for-line from ../blinkit/interaction.js where the logic is
 // the same. Rows are built HERE, in the interaction, from parse()'s RETURN value: tag values
 // auto-inject into parse()'s return as <field> + <field>_url, and parser.<field> NEVER
 // populates live. collect() is called ONCE with an array. Only endpoints we CONSUME are
-// tagged — a tagged endpoint returning a bad status kills the run.
+// tagged - a tagged endpoint returning a bad status kills the run.
 // Money on Instamart is {units,nanos} -> rupees = units + nanos/1e9. NEVER /100 (Zepto-only quirk).
-// One row per VARIATION (multipacks are separate rows — honest, they are separate SKUs).
+// One row per VARIATION (multipacks are separate rows - honest, they are separate SKUs).
 const keyword = input.keyword;
 const pincode = input.pincode;
 
@@ -22,13 +22,13 @@ const imPodEta = (root) => { const map = {}; try { const arr = (root && root.con
 const imPrimaryPod = (root) => { try { const arr = (root && root.configs && root.configs.IM_PAGE_CONFIGS && root.configs.IM_PAGE_CONFIGS.configInfo) || []; for (let i = 0; i < arr.length; i++) { const pd = (arr[i] && arr[i].card && arr[i].card.podDetailsList) || []; for (let k = 0; k < pd.length; k++) { if (pd[k] && pd[k].priority === 'PRIORITY_PRIMARY' && pd[k].podId) { return String(pd[k].podId); } } } } catch (eR) { } return null; };
 // podId is the location proof (Blinkit's merchant_id / Zepto's storeId).
 const imFirstStore = (root) => { try { const its = imItems(root); for (let i = 0; i < its.length; i++) { const vs = (its[i] && its[i].variations) || []; for (let k = 0; k < vs.length; k++) { if (vs[k] && vs[k].podId) { return String(vs[k].podId); } } } } catch (eF) { } return imPrimaryPod(root); };
-// Keyword echo — Instamart has no "Showing results for" snippet; the per-item analytics carry it.
+// Keyword echo - Instamart has no "Showing results for" snippet; the per-item analytics carry it.
 const imQueryEcho = (root) => { try { const its = imItems(root); for (let i = 0; i < its.length; i++) { const a = its[i] && its[i].analytics; const ef = a && a.extraFields; const s = (ef && ef.searchString) || (a && a.objectValue); if (s) { return String(s); } } } catch (eQ) { } return null; };
 const imRupees = (m) => { if (m === undefined || m === null) { return null; } if (typeof m === 'number') { return isNaN(m) ? null : m; } if (typeof m === 'string') { const n0 = parseFloat(m.replace(/[^0-9.]/g, '')); return isNaN(n0) ? null : n0; } const u = (m.units === undefined || m.units === null) ? 0 : parseFloat(String(m.units)); const na = (m.nanos === undefined || m.nanos === null) ? 0 : Number(m.nanos); if (isNaN(u)) { return null; } const v = u + (isNaN(na) ? 0 : na / 1e9); return isNaN(v) ? null : v; };
 const imMoney = (m) => { const n = imRupees(m); if (n === null) { return null; } try { return new Money(n, 'INR'); } catch (eM) { return n; } };
 // Ad markers PROVEN in the sample: item.badges[] carries {type:'BADGE_TYPE_AD', text:'Ad'} and
 // item.adTrackingContext is a non-empty ad string. Both agree on exactly the same 4 items (12
-// variations). NOTE: 'BADGE' itself contains the substring 'AD' — match on 'TYPE_AD', never 'AD'.
+// variations). NOTE: 'BADGE' itself contains the substring 'AD' - match on 'TYPE_AD', never 'AD'.
 const imSponsored = (it) => { try { const b = (it && it.badges) || []; for (let i = 0; i < b.length; i++) { const t = String((b[i] && b[i].type) || ''); const x = String((b[i] && b[i].text) || '').trim(); if (t.indexOf('TYPE_AD') > -1 || /^ad$/i.test(x)) { return true; } } } catch (eB) { } try { const a = it && it.adTrackingContext; if (typeof a === 'string' && a.length > 0) { return true; } } catch (eA) { } return false; };
 const imOOS = (it, v) => { try { if (it && it.inStock === false) { return true; } if (it && it.isAvail === false) { return true; } if (v && v.inventory && v.inventory.inStock === false) { return true; } if (v && v.slotInfo && v.slotInfo.isAvail === false) { return true; } } catch (eO) { } return false; };
 // No stock COUNT exists in the payload (inventory = {inStock, lowStockText}); cartAllowedQuantity
@@ -37,11 +37,11 @@ const imOOS = (it, v) => { try { if (it && it.inStock === false) { return true; 
 const imQty = (v) => { try { const t = String((v && v.inventory && v.inventory.lowStockText) || ''); const m = t.match(/(\d+)/); if (m) { return parseInt(m[1], 10); } } catch (eQ2) { } return null; };
 const imEta = (v, podMap, pageEta) => { try { const sla = v && v.sla; if (sla) { const raw = (sla.value !== undefined && sla.value !== null) ? sla.value : sla.deliveryTime; const n = parseInt(String(raw), 10); if (!isNaN(n)) { return n; } const tx = String(sla.text || sla.title || ''); const m = tx.match(/(\d+)\s*min/i); if (m) { return parseInt(m[1], 10); } } const pid = (v && v.podId) ? String(v.podId) : null; if (pid && podMap && podMap[pid] !== undefined) { return podMap[pid]; } } catch (eE) { } return (pageEta === undefined) ? null : pageEta; };
 // image_url is TEXT, never new Image() (finding 9c: it THROWS in the live sandbox). The sample
-// carries no absolute URLs — only ids — so the base is derived from the live DOM when possible
+// carries no absolute URLs - only ids - so the base is derived from the live DOM when possible
 // (ctx.img_base) and falls back to Swiggy's documented CDN root. imageIds excludes videos.
 const imImage = (v, base) => { try { const ids = (v && v.imageIds) || []; let id = null; for (let i = 0; i < ids.length; i++) { if (ids[i]) { id = String(ids[i]); break; } } if (id === null) { const md = (v && v.medias) || []; for (let k = 0; k < md.length; k++) { if (md[k] && md[k].id && String(md[k].type || '').indexOf('IMAGE') > -1) { id = String(md[k].id); break; } } } if (id === null) { return null; } if (id.indexOf('http') === 0) { return id; } const b = base ? String(base) : 'https://media-assets.swiggy.com/swiggy/image/upload/'; return b + id; } catch (eI2) { return null; } };
 // 18-field contract, identical to Zepto B12 / Blinkit v1 (BD auto-appends the job's `input`
-// object to every dataset row, so {keyword, pincode} rides along for free — no extra column
+// object to every dataset row, so {keyword, pincode} rides along for free - no extra column
 // needed. Those two ARE the whole input: no coordinates are sent, because the pincode is
 // typed into the site).
 const imBuildRows = (root, ctx) => { const rows = []; const seen = {}; ctx.row_errors = 0; const podMap = imPodEta(root); const its = imItems(root); for (let i = 0; i < its.length; i++) { const it = its[i]; const vs = (it && it.variations) || []; const spon = imSponsored(it); for (let k = 0; k < vs.length; k++) { try { const v = vs[k]; if (!v) { continue; } let id = v.skuId || v.spinId || null; if (!id) { id = String(v.displayName || it.displayName || '') + '|' + String(v.quantityDescription || ''); } id = String(id); if (!id || seen[id]) { continue; } seen[id] = 1; const pr = v.price || {}; const off = (pr.offerPrice !== undefined && pr.offerPrice !== null) ? pr.offerPrice : pr.mrp; const rv = (v.rating && v.rating.value !== undefined && v.rating.value !== null && String(v.rating.value) !== '') ? parseFloat(String(v.rating.value)) : null; rows.push({ product_name: v.displayName || it.displayName || null, brand: v.brandName || it.brand || null, package_size: v.quantityDescription || null, product_id: id, mrp: imMoney((pr.mrp !== undefined && pr.mrp !== null) ? pr.mrp : off), selling_price: imMoney(off), discounted_selling_price: imMoney(off), out_of_stock: imOOS(it, v), available_quantity: imQty(v), is_sponsored: spon, rating: (rv === null || isNaN(rv)) ? null : rv, image_url: imImage(v, ctx.img_base), serp_screenshot: ctx.shot || null, store_id: v.podId ? String(v.podId) : null, requested_pincode: ctx.pincode || null, resolved_area: ctx.resolved_area || null, eta_minutes: imEta(v, podMap, ctx.page_eta), captured_at: ctx.captured_at }); } catch (eRow) { ctx.row_errors = ctx.row_errors + 1; } } } return rows; };
@@ -60,7 +60,7 @@ const imPick = (cands, t0, t1) => { for (let i = 0; i < cands.length; i++) { if 
 
 // Page 1 = any search/v2 call WITHOUT a non-zero offset (B12/Blinkit-proven lookahead: last-match-
 // wins meant a page-2 prefetch overwrote page 1 on Blinkit). Page 2 tagged separately + merged.
-// Broad fallback third. UNVERIFIED: the page-2 URL shape — the sample says data.pageOffset =
+// Broad fallback third. UNVERIFIED: the page-2 URL shape - the sample says data.pageOffset =
 // {nextOffset:"1"} and searchResultsOffset:32, so page 2 is most likely ?offset=1 (page index),
 // which this lookahead excludes correctly; an item-style offset=32 is excluded too. A param named
 // like `page_offset=1` would poison the page-1 tag -> search_api_any is the safety net.
@@ -109,7 +109,7 @@ if (pinInput === null) { let trig = imPick(['[data-testid="search-location"]', '
 // Dialog "Share location to find the closest Instamart store" -> "Search for an area or address".
 if (pinInput === null) { const hD = html() || ''; console.log('DLG_DUMP=' + imDump(hD, 'closest Instamart', 400, 1100)); console.log('DLG_DUMP2=' + imDump(hD, 'Search for an area', 350, 700)); let sBtn = imPick(['[data-testid="search-location"]', '[data-testid*="search-area" i]', '[data-testid*="addressSearch" i]', '[data-testid*="search" i][role="button"]'], 4000, 1500); if (sBtn === null) { sBtn = imSelNear(hD, 'Search for an area'); console.log('DERIVED search_area=' + sBtn); } console.log('SEL search_area_button=' + sBtn); if (sBtn !== null) { click(sBtn); wait_page_idle(); } }
 
-// The textbox. NEVER input[type="text"] and never a bare placeholder*="Search" — both matched
+// The textbox. NEVER input[type="text"] and never a bare placeholder*="Search" - both matched
 // the PRODUCT search box on Zepto and typed the pincode into it.
 if (pinInput === null) { pinInput = imPick(INPUT_CANDS, 15000, 2000); }
 if (pinInput === null) { const hI = html() || ''; console.log('INPUT_DUMP=' + imDump(hI, 'street name', 400, 800)); console.log('INPUT_DUMP2=' + imDump(hI, '<input', 250, 700)); }
@@ -151,7 +151,7 @@ if (confirmSel === null) { console.log('MAP_CONFIRM=absent -> continuing (UNVERI
 try { wait_hidden(pinInput, {timeout: 15000}); console.log('DIALOG_CLOSED=true'); } catch (eDlg) { console.log('DIALOG_CLOSED=timeout'); }
 
 // Header after confirm: "6 mins Delivery to <pincode>, <area>, ..." = resolved_area +
-// ETA. Read it HERE, not on the SERP — the search page may not carry the location header.
+// ETA. Read it HERE, not on the SERP - the search page may not carry the location header.
 const hH = html() || '';
 let resolvedArea = null;
 let headerEta = null;
