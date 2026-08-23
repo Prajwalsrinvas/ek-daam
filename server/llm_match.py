@@ -232,7 +232,13 @@ async def _llm_client(settings: Settings) -> AsyncIterator[Any]:
     import instructor
     from openai import AsyncOpenAI
 
-    raw = AsyncOpenAI(base_url=OPENROUTER_BASE_URL, api_key=settings.openrouter_api_key)
+    # max_retries=0: the SDK's own retry honours the provider's Retry-After
+    # inside the call, which on a sustained 429 can spend the whole phase budget
+    # before the fallback models below ever get a turn. Retrying is this
+    # module's job, with the budget in view.
+    raw = AsyncOpenAI(
+        base_url=OPENROUTER_BASE_URL, api_key=settings.openrouter_api_key, max_retries=0
+    )
     try:
         yield instructor.from_openai(raw, mode=instructor.Mode.JSON)
     finally:
@@ -374,8 +380,14 @@ def collect_groups(
     for key, cluster in answers:
         for confidence, raw_groups in (("high", cluster.same), ("low", cluster.maybe)):
             for raw in raw_groups:
-                ids = list(dict.fromkeys(raw))
-                refusal = _admit(ids, key, by_id, used)
+                ids = list(raw)
+                # An id repeated inside one answer is a malformed answer, not a
+                # group with a typo in it: rejected, the same as an id reused
+                # across groups.
+                refusal = (
+                    "id repeated inside the group" if len(ids) != len(set(ids))
+                    else _admit(ids, key, by_id, used)
+                )
                 if refusal is not None:
                     rejected += 1
                     log.info("llm_match: rejected %s from block %s: %s", ids, key, refusal)

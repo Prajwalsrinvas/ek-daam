@@ -198,6 +198,32 @@ def test_every_run_the_list_names_is_public(settings) -> None:
     assert replay.status_code == 202
 
 
+def test_a_capture_with_no_owner_is_still_public_when_the_list_names_it(settings) -> None:
+    """Not hypothetical: most captures worth curating were made before the owner
+    cookie existed, so they belong to nobody and are reachable by no visitor. The
+    list is what makes them public, and it has to work on exactly those."""
+    with TestClient(create_app(settings)) as author:
+        run_id = author.post(
+            "/api/runs", json={"query": "chips", "pincode": "560001"}
+        ).json()["run_id"]
+        wait_for_done(author, run_id)
+
+    path = settings.runs_dir / run_id / "meta.json"
+    meta = json.loads(path.read_text(encoding="utf-8"))
+    del meta["owner_hash"]
+    path.write_text(json.dumps(meta), encoding="utf-8")
+    write_demo(settings, [{"id": "one", "title": "Chips", "kind": "run", "run_ids": [run_id]}])
+
+    with TestClient(create_app(settings)) as visitor:
+        snapshot = visitor.get(f"/api/runs/{run_id}")
+        artifact = visitor.get(f"/api/runs/{run_id}/artifacts/zepto.png")
+        replay = visitor.post(f"/api/replays/{run_id}")
+
+    assert snapshot.status_code == 200
+    assert artifact.status_code == 200
+    assert replay.status_code == 202
+
+
 def test_a_run_the_list_does_not_name_is_still_private(settings) -> None:
     with TestClient(create_app(settings)) as author:
         public = author.post(

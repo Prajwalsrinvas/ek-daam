@@ -425,11 +425,13 @@ class RunManager:
             )
 
     def _spend_budget(self) -> None:
-        """One unit spent. A unit is one Bright Data TRIGGER, not one app run.
+        """One unit spent. A unit is one app RUN START or one watchdog RETRIGGER.
 
-        The watchdog's retrigger sends a second job for the same universe, and
-        that job costs exactly what the first one cost, so counting only app runs
-        under-reported the day's real spend by however many jobs were replaced.
+        Not one collector job: a run start fans out to every wired universe (up
+        to four jobs) and still costs one unit, which is what
+        SVERSE_DAILY_RUN_BUDGET ("live runs per day") promises. The retrigger is
+        counted on top because it is a second job the operator did not ask for,
+        so a day of stalls shows up in the count rather than hiding inside it.
         Rolls the day over here as well, because a process that has been up since
         yesterday can reach this without passing the check first.
         """
@@ -704,10 +706,21 @@ class RunManager:
             created_at=utc_now_iso(),
             owner_hash=owner_hash,
         )
-        for query, client in zip(queries, clients):
-            meta = self._start_run(query, pincode, client, owner_hash)
-            cart.items.append(CartItem(item=query, run_id=meta.run_id))
-        write_cart(self.settings, cart)
+        # If starting any item fails partway (a full disk, a failed write), the
+        # items already in flight are cancelled rather than left running as
+        # orphans the visitor was never told about: the promise above is all or
+        # nothing, and a failure mid-loop is not allowed to turn it into "some".
+        try:
+            for query, client in zip(queries, clients):
+                meta = self._start_run(query, pincode, client, owner_hash)
+                cart.items.append(CartItem(item=query, run_id=meta.run_id))
+            write_cart(self.settings, cart)
+        except Exception:
+            for item in cart.items:
+                task = self._tasks.get(item.run_id)
+                if task is not None and not task.done():
+                    task.cancel()
+            raise
 
         self._last_run_at[client_ip] = time.monotonic()
         self._prune_memory()

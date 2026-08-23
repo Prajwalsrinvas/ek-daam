@@ -184,6 +184,15 @@ scaffold therefore delivers dev-version rows with the scaffold's fields only
 template collects all 18. Use `SVERSE_COLLECTOR_VERSION_<UNIVERSE>=dev` for
 smoke runs only; promote before wiring a universe into a demo.
 
+
+**The demo list is a wider door than the one public run.** `SVERSE_DEMO_FILE`
+names a JSON list of demo entries (single runs, carts, stories), and EVERY run
+id it names becomes readable and replayable by any visitor, exactly like
+`SVERSE_DEMO_RUN_ID`. The file is operator-curated and re-read on each request,
+so publishing a capture is editing that file; unpublishing is removing the id.
+Put nothing in it you would not put on the landing page, because that is where
+it goes. See `server/demo.py`.
+
 ## Curated replays: the directory name is load-bearing
 
 `runs/` is gitignored in full, `runs/replays/` included, so a curated capture
