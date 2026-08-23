@@ -16,6 +16,10 @@ export type EventType =
   | "failed"
   | "timed_out"
   | "done"
+  // the additional, labelled model matching layer. Run-level (`universe: null`),
+  // emitted after the deterministic comparison and BEFORE `done`. It never
+  // changes the receipt: it only adds groups of its own, labelled as its own.
+  | "llm_match"
   // reserved, defined but not emitted yet
   | "incident"
   // the self-heal cycle (POST /api/chaos/heal)
@@ -59,6 +63,42 @@ export interface UniversesResponse {
   /** The one capture anyone may replay without having run anything. Null when
    *  none is configured, and the UI offers no demo button then. */
   demo_run_id: string | null;
+  /** Every capture this server offers publicly, newest thinking first. A server
+   *  with none configured sends an empty list and the UI says so rather than
+   *  hiding the tab. Old servers omit the field entirely, so every read of it
+   *  goes through `?? []`. */
+  demo: DemoEntry[];
+}
+
+/** One publicly replayable capture. `kind` decides how many runs it drives:
+ *  a `run` is one, a `cart` is one per item in item order, a `story` is an
+ *  ordered set of chapters. */
+export interface DemoEntry {
+  id: string;
+  title: string;
+  /** One line saying what to look for. Shown on the card, never invented here. */
+  note: string;
+  kind: "run" | "cart" | "story";
+  run_ids: string[];
+  /** Cart only, same order as `run_ids`. */
+  items: string[] | null;
+  /** Story only, one label per run id. */
+  chapters: string[] | null;
+}
+
+/** N products at one pincode = N ordinary runs, fanned out. There is no
+ *  cart-level event stream: the UI subscribes to each run and a cart is replayed
+ *  by replaying each of its runs. */
+export interface CartItem {
+  item: string;
+  run_id: string;
+}
+
+export interface Cart {
+  cart_id: string;
+  pincode: string;
+  created_at: string;
+  items: CartItem[];
 }
 
 export interface NormalizedRow {
@@ -94,13 +134,31 @@ export interface ComparisonGroup {
   qty: number | null;
   unit: string | null;
   variant: string | null;
-  /** "close" = same brand token, same base pack size, same variant, and the
-   *  product names agree. Deliberately the strongest label there is: the
-   *  resolver has no product identity to be certain about. See
-   *  server/resolve.py. */
-  confidence: "close" | "unmatched";
+  /** Rules groups: "close" = same brand token, same base pack size, same
+   *  variant, and the product names agree. Deliberately the strongest label
+   *  there is: the resolver has no product identity to be certain about. See
+   *  server/resolve.py. Model groups carry "high" or "low" instead, and the UI
+   *  never prints either without the word "model-suggested" next to it. */
+  confidence: "close" | "unmatched" | "high" | "low";
+  /** Who aligned this group. Absent on a run captured before the model layer
+   *  existed, which is why every read defaults it to "rules". */
+  source: "rules" | "model";
   universes: string[];
   rows: NormalizedRow[];
+}
+
+/** The model layer's own report, as the snapshot carries it. Null on a run that
+ *  predates the layer; `status: "skipped"` when it was switched off or had
+ *  nothing to do, with the reason spelled out. */
+export interface LlmReport {
+  status: "started" | "done" | "failed" | "skipped" | null;
+  model: string | null;
+  seconds: number | null;
+  blocks: number | null;
+  rows_sent: number | null;
+  accepted: number | null;
+  rejected: number | null;
+  reason: string | null;
 }
 
 export interface Comparison {
@@ -113,6 +171,12 @@ export interface Comparison {
    *  the store is one this app serves itself, so its prices are invented. Shown
    *  under their own heading, never matched. */
   demo_rows: NormalizedRow[];
+  /** What the MODEL adds on top of the deterministic groups, and only that: a
+   *  model group that duplicates a rules group is dropped server-side. Rows
+   *  only, joined back from the captured rows: the model never supplies a name
+   *  or a price. Old runs carry none, so every read goes through `?? []`. */
+  llm_groups: ComparisonGroup[];
+  llm: LlmReport | null;
 }
 
 export interface RunMeta {

@@ -2,7 +2,7 @@
 //
 // Every timestamp the app shows is part of a receipt: an event's moment, a row's
 // capture time. Two of them are only comparable if they are read in the same
-// zone, and they were not — the event feed printed raw UTC off the ISO string
+// zone, and they were not - the event feed printed raw UTC off the ISO string
 // while the comparison cells used the viewer's local time, so the same instant
 // appeared twice under two different clocks with nothing saying which was which.
 //
@@ -41,8 +41,18 @@ export function istClock(iso: string | null | undefined): string | null {
   return at === null ? null : `${CLOCK.format(at)} IST`;
 }
 
-/** `14:22:07.412 IST` — the event feed, where ordering within a second matters. */
+/** `14:22:07.412 IST` - the event feed, where ordering within a second matters. */
 export function istClockMs(iso: string | null | undefined): string | null {
   const at = parsed(iso);
   return at === null ? null : `${CLOCK_WITH_MS.format(at)} IST`;
+}
+
+/** Whole seconds between an event's timestamp and `now`, never negative.
+ *  The UI shows elapsed time only where a real event started a real clock: a
+ *  collector job that has been triggered, a model that has been asked. Nothing
+ *  in this app counts up towards an outcome it has not observed. */
+export function secondsSince(iso: string | null | undefined, now: number): number | null {
+  const at = parsed(iso);
+  if (at === null) return null;
+  return Math.max(0, Math.floor((now - at.getTime()) / 1000));
 }

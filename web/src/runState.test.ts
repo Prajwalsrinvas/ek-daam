@@ -366,7 +366,7 @@ group("a run-level failure ends the run", () => {
     expect(state.error).toBe("the run timed out after 240s");
   });
 
-  it("leaves a per-universe failure alone — the run carries on", () => {
+  it("leaves a per-universe failure alone - the run carries on", () => {
     nextIndex = 1;
     const state = foldAll(emptyRunState(), [
       event("failed", { error: "mapper blew up" }, { universe: "blinkit" }),
@@ -389,5 +389,212 @@ group("a run-level failure ends the run", () => {
 
   it("still has no error on a healthy run", () => {
     expect(foldAll(fresh(), lifecycle()).error).toBeNull();
+  });
+});
+
+group("the model matching layer", () => {
+  it("is subscribed to, or the frontend never sees a single frame of it", () => {
+    // The server names every SSE frame, and a named frame absent from this list
+    // never reaches the UI at all, silently.
+    expect(IMPLEMENTED_EVENT_TYPES).toContain("llm_match");
+  });
+
+  it("records what was asked, and when, from the started event", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event(
+        "llm_match",
+        { status: "started", model: "stealth/ox-alpha", blocks: 15, rows_sent: 74 },
+        { universe: null },
+      ),
+    ]);
+
+    expect(state.llm).toEqual({
+      status: "started",
+      model: "stealth/ox-alpha",
+      blocks: 15,
+      rowsSent: 74,
+      accepted: null,
+      rejected: null,
+      seconds: null,
+      reason: null,
+      startedAt: "2026-08-22T09:12:33.412Z",
+    });
+  });
+
+  it("keeps what `started` said when `done` arrives without it", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event(
+        "llm_match",
+        { status: "started", model: "stealth/ox-alpha", blocks: 15, rows_sent: 74 },
+        { universe: null },
+      ),
+      event(
+        "llm_match",
+        { status: "done", accepted: 18, rejected: 0, seconds: 8.1 },
+        { universe: null },
+      ),
+    ]);
+
+    // The block and row counts are the size of the question that was asked, and
+    // the answer event does not repeat them. Losing them would leave the receipt
+    // saying "0 blocks" for a layer that really did send fifteen.
+    expect(state.llm?.status).toBe("done");
+    expect(state.llm?.blocks).toBe(15);
+    expect(state.llm?.rowsSent).toBe(74);
+    expect(state.llm?.model).toBe("stealth/ox-alpha");
+    expect(state.llm?.accepted).toBe(18);
+    expect(state.llm?.rejected).toBe(0);
+    expect(state.llm?.seconds).toBe(8.1);
+    // Still the moment the model was asked, which is what the elapsed counter
+    // in the receipt is measured from.
+    expect(state.llm?.startedAt).toBe("2026-08-22T09:12:33.412Z");
+  });
+
+  it("carries the reason on skipped and on failed", () => {
+    nextIndex = 1;
+    const skipped = foldAll(emptyRunState(), [
+      event("llm_match", { status: "skipped", reason: "no key" }, { universe: null }),
+    ]);
+    expect(skipped.llm?.status).toBe("skipped");
+    expect(skipped.llm?.reason).toBe("no key");
+    expect(skipped.llm?.startedAt).toBeNull();
+
+    nextIndex = 1;
+    const failed = foldAll(emptyRunState(), [
+      event(
+        "llm_match",
+        { status: "failed", reason: "every block failed", seconds: 30.0 },
+        { universe: null },
+      ),
+    ]);
+    expect(failed.llm?.status).toBe("failed");
+    expect(failed.llm?.reason).toBe("every block failed");
+    expect(failed.llm?.seconds).toBe(30);
+  });
+
+  it("is null on a run that never reported the layer", () => {
+    // Every run captured before the layer existed. The receipt says "model: not
+    // run" for these rather than inventing a status.
+    expect(foldAll(fresh(), lifecycle()).llm).toBeNull();
+  });
+
+  it("touches no universe: the receipt above it is untouched", () => {
+    const before = foldAll(fresh(), lifecycle());
+    const after = foldEvent(
+      before,
+      event("llm_match", { status: "done", accepted: 3, rejected: 1 }, { universe: null }),
+    );
+
+    expect(after.universes).toEqual(before.universes);
+    expect(after.order).toEqual(before.order);
+    expect(after.done).toBe(before.done);
+  });
+
+  it("describes each status in its own words", () => {
+    nextIndex = 1;
+    expect(
+      describeEvent(
+        event(
+          "llm_match",
+          { status: "started", model: "stealth/ox-alpha", blocks: 15, rows_sent: 74 },
+          { universe: null },
+        ),
+      ),
+    ).toContain("15 block(s)");
+    expect(
+      describeEvent(
+        event(
+          "llm_match",
+          { status: "done", model: "stealth/ox-alpha", accepted: 18, rejected: 2, seconds: 8.1 },
+          { universe: null },
+        ),
+      ),
+    ).toContain("2 rejected by the guards");
+    expect(
+      describeEvent(event("llm_match", { status: "skipped", reason: "replay" }, { universe: null })),
+    ).toBe("model layer skipped: replay");
+    expect(
+      describeEvent(event("llm_match", { status: "failed", reason: "timeout" }, { universe: null })),
+    ).toBe("model layer failed: timeout");
+  });
+});
+
+group("the self-heal strip", () => {
+  it("walks the four observed steps in order", () => {
+    nextIndex = 1;
+    const events = [
+      event("heal_started", { prompt_chars: 420 }, { universe: "chaos" }),
+      event(
+        "heal_previewed",
+        { step: "code_fixer", preview_result: [{ name: "a" }, { name: "b" }] },
+        { universe: "chaos" },
+      ),
+      event("heal_approved", { auto_save: true }, { universe: "chaos" }),
+      event("heal_promoted", { template: "healed_template" }, { universe: "chaos" }),
+    ];
+
+    expect(foldAll(emptyRunState(), events.slice(0, 1)).universes.chaos.heal?.step).toBe("plan");
+    const previewed = foldAll(emptyRunState(), events.slice(0, 2)).universes.chaos.heal;
+    expect(previewed?.step).toBe("preview");
+    // The row count is what a reviewer approves on, so it is counted rather than
+    // described.
+    expect(previewed?.detail).toBe("paused at code_fixer, 2 preview row(s)");
+    expect(foldAll(emptyRunState(), events.slice(0, 3)).universes.chaos.heal?.step).toBe("approve");
+    const promoted = foldAll(emptyRunState(), events).universes.chaos.heal;
+    expect(promoted?.step).toBe("promote");
+    expect(promoted?.detail).toContain("healed_template");
+  });
+
+  it("never walks backwards, so a resumed stream cannot un-repair a collector", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event("heal_promoted", { template: "t" }, { universe: "chaos" }),
+      event("heal_started", { prompt_chars: 10 }, { universe: "chaos" }),
+    ]);
+
+    expect(state.universes.chaos.heal?.step).toBe("promote");
+  });
+
+  it("is null on an ordinary run", () => {
+    expect(foldAll(fresh(), lifecycle()).universes.zepto.heal).toBeNull();
+  });
+
+  it("keeps the stage name a heal job reports through progress", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event("progress", { step: "code_fixer" }, { universe: "chaos" }),
+      event("progress", { step: "" }, { universe: "chaos" }),
+    ]);
+
+    // A later tick with no stage must not blank the last one that was named.
+    expect(state.universes.chaos.stage).toBe("code_fixer");
+    expect(state.universes.chaos.pagesLeft).toBeNull();
+  });
+});
+
+group("a retriggered universe keeps its pill", () => {
+  it("records how long the stalled job was watched, and keeps it to the end", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event("triggered", { job_id: "j_stalled", version: "prod" }),
+      event("retriggered", { job_id: "j_stalled", after_s: 77.4 }),
+      event("triggered", { job_id: "j_fresh", version: "prod" }),
+      event("rows", { n: 22 }),
+      event("validated", { rows_kept: 22, rows_dropped: 0, reasons: {} }),
+    ]);
+    const zepto = state.universes.zepto;
+
+    // The second try is the most interesting thing that happened to this
+    // universe, so it survives every later event rather than being replaced by
+    // the happy ending.
+    expect(zepto.retriggeredAfterS).toBe(77.4);
+    expect(zepto.status).toBe("validated");
+    expect(zepto.jobVersion).toBe("prod");
+  });
+
+  it("is null on a universe that never needed one", () => {
+    expect(foldAll(fresh(), lifecycle()).universes.zepto.retriggeredAfterS).toBeNull();
   });
 });

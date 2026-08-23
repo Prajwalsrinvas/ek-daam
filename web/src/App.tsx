@@ -1,71 +1,92 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { eventsUrl, getRun, getRuns, getUniverses, startReplay, startRun } from "./api";
-import ComparisonTable from "./components/ComparisonTable";
-import EventFeed from "./components/EventFeed";
+import { getCarts, getRuns, getUniverses, startCart, startReplay, startRun } from "./api";
+import { ErrorBanner, MockBanner, ReplayBanner } from "./components/Banners";
+import BasketBar from "./components/BasketBar";
+import CompareForm from "./components/CompareForm";
+import DemoStrip from "./components/DemoStrip";
+import FlightRecorder from "./components/FlightRecorder";
 import MyRuns from "./components/MyRuns";
-import Screenshots from "./components/Screenshots";
-import UniverseChips from "./components/UniverseChips";
-import {
-  emptyRunState,
-  foldEvent,
-  IMPLEMENTED_EVENT_TYPES,
-  type RunState,
-} from "./runState";
-import type { Comparison, RunEvent, RunMeta, Universe } from "./types";
+import PortalDeck from "./components/PortalDeck";
+import Receipt from "./components/Receipt";
+import TopBar, { type Tab } from "./components/TopBar";
+import { emptyRunState } from "./runState";
+import type { Cart, DemoEntry, RunMeta, Universe } from "./types";
+import { EMPTY_COMPARISON, useRunStreams } from "./useRunStream";
 
-type Action = { kind: "reset" } | { kind: "event"; event: RunEvent };
-
-function reducer(state: RunState, action: Action): RunState {
-  if (action.kind === "reset") return emptyRunState();
-  return foldEvent(state, action.event);
+/** What the page is currently showing: one run, or one run per cart item.
+ *  `labels` is aligned to `runIds` and holds the item name for a cart, null for
+ *  a single run. */
+interface Viewing {
+  runIds: string[];
+  labels: (string | null)[];
+  /** The demo card that started this, so the card can say REPLAYING. */
+  demoId: string | null;
 }
 
-const EMPTY_COMPARISON: Comparison = {
-  groups: [],
-  unmatched: [],
-  row_count: 0,
-  universe_count: 0,
-  demo_rows: [],
-};
+const NOTHING: Viewing = { runIds: [], labels: [], demoId: null };
 
-const PINCODE_LENGTH = 6;
+/** A once-per-second tick, and only while something is actually running.
+ *  Everything it feeds shows a REAL duration measured from a real event's
+ *  timestamp; nothing in this app counts up towards an outcome it has not seen. */
+function useNow(active: boolean): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [active]);
+  return now;
+}
 
-/** Run-level (`universe: null`) events that end a run. `done` is the happy one;
- *  the other two arrive INSTEAD of it. */
-const RUN_ENDING = new Set(["done", "failed", "timed_out"]);
+/** `#demo/<id>` deep-links a demo card, which is how a capture gets shared. */
+function demoIdInHash(): string | null {
+  const hash = window.location.hash.replace(/^#/, "");
+  return hash.startsWith("demo/") ? hash.slice("demo/".length) : null;
+}
 
 export default function App() {
-  const [state, dispatch] = useReducer(reducer, undefined, emptyRunState);
   const [registry, setRegistry] = useState<Universe[]>([]);
-  const [serverMode, setServerMode] = useState<string>("");
-  const [queryAllowlist, setQueryAllowlist] = useState<string[]>([]);
-  const [query, setQuery] = useState("amul butter");
-  const [pincode, setPincode] = useState("");
-  const [comparison, setComparison] = useState<Comparison>(EMPTY_COMPARISON);
-  const [error, setError] = useState<string | null>(null);
-  const [comparisonError, setComparisonError] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
-  // This browser's own runs. The server scopes the listing to the anonymous
-  // owner cookie, so nothing here has to be filtered client-side.
+  const [serverMode, setServerMode] = useState("");
+  const [allowlist, setAllowlist] = useState<string[]>([]);
+  const [demos, setDemos] = useState<DemoEntry[]>([]);
+  const [tab, setTab] = useState<Tab>("demo");
+  const [viewing, setViewing] = useState<Viewing>(NOTHING);
   const [myRuns, setMyRuns] = useState<RunMeta[]>([]);
-  const [demoRunId, setDemoRunId] = useState<string | null>(null);
-  const source = useRef<EventSource | null>(null);
+  const [myCarts, setMyCarts] = useState<Cart[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [recorderOpen, setRecorderOpen] = useState(false);
 
-  // Which run the UI is currently showing, and how many comparison fetches have
-  // been issued for it. A run emits `validated` per universe and then `done`, so
-  // several fetches are in flight at once and they do NOT come back in order.
-  // Without both guards a slow early response could overwrite a later, fuller
-  // one — or land on the next run entirely and show the previous run's prices.
-  const showing = useRef<string | null>(null);
-  const fetchSeq = useRef(0);
+  const streams = useRunStreams(viewing.runIds);
+  const lanes = useMemo(
+    () =>
+      viewing.runIds.map((runId, i) => ({
+        runId,
+        label: viewing.labels[i] ?? null,
+        lane: streams[runId],
+      })),
+    [viewing, streams],
+  );
 
-  // Failing quietly is right here and only here: "My runs" is a convenience
-  // panel, and a listing that could not be fetched must not put an error banner
-  // over a run the visitor is watching.
-  const refreshMyRuns = useCallback(() => {
+  const inFlight = lanes.length > 0 && lanes.some(({ lane }) => !lane?.state.done);
+  const now = useNow(inFlight);
+  const first = lanes[0]?.lane ?? null;
+  const isCart = lanes.length > 1;
+  const anyReplay = lanes.some(({ lane }) => lane?.state.replay);
+  const runError = lanes.find(({ lane }) => lane?.state.error)?.lane?.state.error ?? null;
+  const isMock = (first?.state.mode ?? serverMode) === "mock";
+
+  // Failing quietly is right here and only here: this listing is a convenience
+  // panel, and one that could not be fetched must not put an error banner over a
+  // run the visitor is watching.
+  const refreshMine = useCallback(() => {
     getRuns()
       .then((data) => setMyRuns(data.runs))
+      .catch(() => undefined);
+    getCarts()
+      .then((data) => setMyCarts(data.carts ?? []))
       .catch(() => undefined);
   }, []);
 
@@ -74,273 +95,263 @@ export default function App() {
       .then((data) => {
         setRegistry(data.universes);
         setServerMode(data.mode);
-        setQueryAllowlist(data.query_allowlist);
-        setDemoRunId(data.demo_run_id);
+        setAllowlist(data.query_allowlist ?? []);
+        // A server that has not been taught the demo list still has the single
+        // legacy capture, and it is exactly one demo entry.
+        const list = data.demo ?? [];
+        setDemos(
+          list.length > 0
+            ? list
+            : data.demo_run_id
+              ? [
+                  {
+                    id: "demo",
+                    title: "The captured demo run",
+                    note: "one product at 560001, re-streamed at the speed it happened at",
+                    kind: "run" as const,
+                    run_ids: [data.demo_run_id],
+                    items: null,
+                    chapters: null,
+                  },
+                ]
+              : [],
+        );
       })
       .catch((e: Error) => setError(e.message));
-    refreshMyRuns();
-    return () => source.current?.close();
-  }, [refreshMyRuns]);
-
-  const refreshComparison = useCallback((runId: string) => {
-    const seq = ++fetchSeq.current;
-    getRun(runId)
-      .then((snapshot) => {
-        if (showing.current !== runId || seq !== fetchSeq.current) return;
-        setComparison(snapshot.comparison);
-        setComparisonError(null);
-      })
-      .catch((e: Error) => {
-        if (showing.current !== runId) return;
-        // Swallowing this left the table saying "no comparison yet" for a run
-        // that had really produced one — a silent wrong answer.
-        setComparisonError(`could not load the comparison: ${e.message}`);
-      });
-  }, []);
-
-  const subscribe = useCallback(
-    (runId: string) => {
-      source.current?.close();
-      dispatch({ kind: "reset" });
-      setComparison(EMPTY_COMPARISON);
-      setComparisonError(null);
-      showing.current = runId;
-      fetchSeq.current = 0;
-
-      // Native EventSource resends Last-Event-ID on reconnect, which is precisely
-      // the resume the server implements.
-      const es = new EventSource(eventsUrl(runId));
-      source.current = es;
-
-      const handler = (message: MessageEvent) => {
-        const event = JSON.parse(message.data) as RunEvent;
-        dispatch({ kind: "event", event });
-        if (event.type === "validated" || event.type === "done") refreshComparison(runId);
-        // A run-level `failed` or `timed_out` arrives INSTEAD of `done`. The run
-        // is over either way and no further event is coming, so the stream is
-        // closed here or the browser reconnects against it forever.
-        if (event.universe === null && RUN_ENDING.has(event.type)) es.close();
-      };
-
-      // The server names every frame (`event: rows`), and named frames never
-      // reach `onmessage` — each type has to be subscribed explicitly.
-      IMPLEMENTED_EVENT_TYPES.forEach((type) =>
-        es.addEventListener(type, handler as EventListener),
-      );
-      es.onmessage = handler;
-      es.onerror = () => {
-        if (es.readyState === EventSource.CLOSED) {
-          source.current = null;
-          return;
-        }
-        // Still reconnecting. If the run has actually finished there is nothing
-        // to reconnect to and the browser would retry forever, so ask the server
-        // what happened, fold whatever was missed, and stop.
-        getRun(runId)
-          .then((snapshot) => {
-            if (showing.current !== runId) return;
-            if (snapshot.meta.status === "running") return; // a real blip; let it retry
-            snapshot.events.forEach((event) => dispatch({ kind: "event", event }));
-            setComparison(snapshot.comparison);
-            es.close();
-            source.current = null;
-          })
-          .catch(() => undefined);
-      };
-    },
-    [refreshComparison],
-  );
+    refreshMine();
+  }, [refreshMine]);
 
   // A run only joins the listing once it is stored as done, so the listing is
   // re-read when one ends rather than when one starts.
   useEffect(() => {
-    if (state.done) refreshMyRuns();
-  }, [state.done, state.runId, refreshMyRuns]);
+    if (!inFlight && viewing.runIds.length > 0) refreshMine();
+  }, [inFlight, viewing.runIds.length, refreshMine]);
 
-  const inFlight = Boolean(state.runId) && !state.done;
-  const pincodeReady = pincode.length === PINCODE_LENGTH;
+  /** Start one replay per run id and show whatever actually started. A cart
+   *  whose fourth replay was refused shows three items and says the fourth was
+   *  refused; it never shows a basket that quietly lost a product. */
+  const replayAll = useCallback(
+    async (runIds: string[], labels: (string | null)[], demoId: string | null) => {
+      setStarting(true);
+      setError(null);
+      try {
+        const results = await Promise.allSettled(runIds.map((id) => startReplay(id)));
+        const started: string[] = [];
+        const startedLabels: (string | null)[] = [];
+        const refused: string[] = [];
+        results.forEach((result, i) => {
+          if (result.status === "fulfilled") {
+            started.push(result.value.run_id);
+            startedLabels.push(labels[i] ?? null);
+          } else {
+            refused.push((result.reason as Error).message);
+          }
+        });
+        if (started.length === 0) {
+          setError(refused[0] ?? "the replay could not be started");
+          return;
+        }
+        if (refused.length > 0) {
+          setError(
+            `${refused.length} of ${runIds.length} could not be replayed: ${refused[0]}. ` +
+              "What is shown below is the rest.",
+          );
+        }
+        setViewing({ runIds: started, labels: startedLabels, demoId });
+      } finally {
+        setStarting(false);
+      }
+    },
+    [],
+  );
 
-  async function onSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (starting || inFlight || !pincodeReady) return;
-    setError(null);
+  const playDemo = useCallback(
+    (entry: DemoEntry) => {
+      window.location.hash = `demo/${entry.id}`;
+      const labels = entry.run_ids.map(
+        (_, i) => entry.items?.[i] ?? entry.chapters?.[i] ?? null,
+      );
+      void replayAll(entry.run_ids, labels, entry.id);
+    },
+    [replayAll],
+  );
+
+  // A shared link opens the capture it names, once, when the list arrives.
+  const [linkHandled, setLinkHandled] = useState(false);
+  useEffect(() => {
+    if (linkHandled || demos.length === 0) return;
+    setLinkHandled(true);
+    const wanted = demoIdInHash();
+    const entry = wanted ? demos.find((d) => d.id === wanted) : undefined;
+    if (entry) playDemo(entry);
+  }, [demos, linkHandled, playDemo]);
+
+  const compare = useCallback(async (items: string[], pincode: string) => {
     setStarting(true);
+    setError(null);
+    window.location.hash = "";
     try {
-      const { run_id } = await startRun(query, pincode);
-      subscribe(run_id);
+      if (items.length === 1) {
+        const { run_id } = await startRun(items[0], pincode);
+        setViewing({ runIds: [run_id], labels: [null], demoId: null });
+      } else {
+        const cart = await startCart(items, pincode);
+        setViewing({
+          runIds: cart.items.map((item) => item.run_id),
+          labels: cart.items.map((item) => item.item),
+          demoId: null,
+        });
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setStarting(false);
     }
-  }
+  }, []);
 
-  const replayRun = useCallback(
-    async (sourceRunId: string) => {
-      setError(null);
-      setStarting(true);
-      try {
-        const { run_id } = await startReplay(sourceRunId);
-        subscribe(run_id);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setStarting(false);
-      }
-    },
-    [subscribe],
-  );
-
-  async function onReplay() {
-    if (!state.runId || starting) return;
-    await replayRun(state.runId);
-  }
-
-  const isMock = (state.mode ?? serverMode) === "mock";
-  const nothingToCompare =
-    state.done &&
-    !comparisonError &&
-    comparison.groups.length + comparison.unmatched.length + comparison.demo_rows.length === 0;
+  const busy = starting || inFlight;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold">EkDaam</h1>
-        <p className="text-sm text-slate-600">
-          Ekdam best price: one product, every universe, one pincode. Collectors race
-          live; every observed state becomes an event. Shelf prices only, sahi sahi.
-        </p>
-      </header>
+    <div className="min-h-full">
+      <div className="mx-auto max-w-[1440px] px-6 pb-16 lg:pr-16">
+        <TopBar tab={tab} onTab={setTab} mode={first?.state.mode ?? serverMode} pincode={first?.state.pincode ?? null} replay={anyReplay} />
 
-      {state.replay && (
-        <div className="rounded border-2 border-amber-400 bg-amber-50 px-4 py-2 font-semibold text-amber-900">
-          REPLAY. These events were captured earlier and are being re-streamed. Nothing here is live.
+        <div className="space-y-3 pb-5">
+          {tab === "demo" ? (
+            <DemoStrip
+              entries={demos}
+              onPlay={playDemo}
+              busy={busy}
+              playingId={viewing.demoId}
+            />
+          ) : (
+            <>
+              <CompareForm
+                onCompare={compare}
+                busy={starting}
+                inFlight={inFlight}
+                allowlist={allowlist}
+              />
+              <MyRuns
+                runs={myRuns}
+                carts={myCarts}
+                onReplayRun={(runId) => void replayAll([runId], [null], null)}
+                onReplayCart={(cart) =>
+                  void replayAll(
+                    cart.items.map((item) => item.run_id),
+                    cart.items.map((item) => item.item),
+                    null,
+                  )
+                }
+                busy={busy}
+                showing={viewing.runIds}
+              />
+            </>
+          )}
         </div>
-      )}
-      {isMock && (
-        <div className="rounded border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700">
-          <strong>MOCK</strong>. BD_MODE=mock. Rows come from a committed fixture, not from a live
-          collector run, and only one universe has one, so a mock run has nothing to compare.
-        </div>
-      )}
 
-      <form onSubmit={onSearch} className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-slate-600">Product</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-72 rounded border border-slate-300 px-3 py-2"
-            maxLength={60}
-            placeholder="amul butter"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-slate-600">Pincode</span>
-          <input
-            value={pincode}
-            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
-            className="w-28 rounded border border-slate-300 px-3 py-2"
-            inputMode="numeric"
-            maxLength={PINCODE_LENGTH}
-            placeholder="6 digits"
-          />
-        </label>
-        <button
-          type="submit"
-          // Disabled while a run is in flight: the server allows one at a time
-          // and answers a second with a 429, and saying so with the button beats
-          // saying it with an error message.
-          disabled={starting || inFlight || !pincodeReady}
-          title={
-            inFlight
-              ? "a run is already in flight"
-              : !pincodeReady
-                ? `a pincode is ${PINCODE_LENGTH} digits`
-                : undefined
-          }
-          className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-40"
+        {(anyReplay || isMock || error || runError) && (
+          <div className="space-y-2 pb-5">
+            {anyReplay && <ReplayBanner />}
+            {isMock && <MockBanner />}
+            {error && <ErrorBanner message={error} />}
+            {runError && <ErrorBanner message={`The run stopped: ${runError}`} />}
+          </div>
+        )}
+
+        {isCart && (
+          <div className="pb-4">
+            <BasketBar
+              items={lanes.map(({ label, lane }, i) => ({
+                label: label ?? `product ${i + 1}`,
+                comparison: lane?.comparison ?? EMPTY_COMPARISON,
+              }))}
+              registry={registry}
+            />
+          </div>
+        )}
+
+        {lanes.length === 0 ? (
+          <div className="space-y-3">
+            <PortalDeck
+              registry={registry}
+              state={emptyRunState()}
+              comparison={EMPTY_COMPARISON}
+              landing
+              now={now}
+            />
+            <Receipt
+              comparison={EMPTY_COMPARISON}
+              registry={registry}
+              query=""
+              pincode={null}
+              llm={null}
+              landing
+              done={false}
+              now={now}
+            />
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {lanes.map(({ runId, label, lane }) => {
+              const state = lane?.state ?? emptyRunState();
+              const comparison = lane?.comparison ?? EMPTY_COMPARISON;
+              return (
+                <div key={runId} className="space-y-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <h2 className="kicker">
+                      {label ?? state.query ?? "loading"}
+                      {state.pincode ? ` · ${state.pincode}` : ""}
+                    </h2>
+                    <span className="mono text-[11px] text-[var(--text-dim)]">
+                      {runId} · {state.done ? (state.error ? "stopped" : "complete") : "in flight"}
+                    </span>
+                  </div>
+                  <PortalDeck
+                    registry={registry}
+                    state={state}
+                    comparison={comparison}
+                    landing={false}
+                    now={now}
+                  />
+                  {lane?.comparisonError && <ErrorBanner message={lane.comparisonError} />}
+                  <Receipt
+                    comparison={comparison}
+                    registry={registry}
+                    query={label ?? state.query ?? ""}
+                    pincode={state.pincode}
+                    llm={state.llm}
+                    landing={false}
+                    done={state.done}
+                    now={now}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <footer
+          className="mono mt-10 flex flex-wrap items-center justify-between gap-3 pt-4 text-[11px] text-[var(--text-dim)]"
+          style={{ borderTop: "1px solid var(--hair)" }}
         >
-          {starting ? "starting…" : inFlight ? "running…" : "Run"}
-        </button>
-        {/* Only a run that actually completed: the server refuses to re-stream a
-            partial capture, so offering the button for a failed run would just
-            produce a 400. */}
-        {state.runId && state.done && !state.error && !state.replay && (
-          <button
-            type="button"
-            onClick={onReplay}
-            disabled={starting}
-            className="rounded border border-slate-300 px-4 py-2 disabled:opacity-40"
-          >
-            Replay this run
-          </button>
-        )}
-        {/* The one capture anyone may re-stream without having run anything.
-            Offered only before this browser is watching a run, so it never sits
-            next to a live one competing for the same button. */}
-        {demoRunId && !state.runId && (
-          <button
-            type="button"
-            onClick={() => replayRun(demoRunId)}
-            disabled={starting}
-            className="rounded border border-amber-400 bg-amber-50 px-4 py-2 text-amber-900 disabled:opacity-40"
-          >
-            Replay the demo capture
-          </button>
-        )}
-        {queryAllowlist.length > 0 && (
-          <span className="text-xs text-slate-500">allowed: {queryAllowlist.join(", ")}</span>
-        )}
-      </form>
+          <span>EkDaam · shelf prices read at one pincode, nothing invented</span>
+          <a href="/chaos" target="_blank" rel="noreferrer noopener" className="link">
+            open the demo store this app breaks and repairs on purpose
+          </a>
+        </footer>
+      </div>
 
-      <MyRuns
-        runs={myRuns}
-        onReplay={replayRun}
-        busy={starting || inFlight}
-        showingRunId={state.runId ?? null}
+      <FlightRecorder
+        lanes={lanes.map(({ runId, label, lane }) => ({
+          runId,
+          label,
+          state: lane?.state ?? emptyRunState(),
+        }))}
+        registry={registry}
+        open={recorderOpen}
+        onOpenChange={setRecorderOpen}
       />
-
-      {error && (
-        <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</p>
-      )}
-      {state.error && (
-        <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
-          The run stopped: {state.error}
-        </p>
-      )}
-
-      {state.runId && (
-        <p className="text-xs text-slate-500">
-          run <code>{state.runId}</code> · “{state.query}” ·{" "}
-          {state.areaLabel && state.areaLabel !== state.pincode
-            ? `${state.areaLabel} (${state.pincode})`
-            : state.pincode}{" "}
-          · {state.done ? (state.error ? "stopped" : "complete") : "in flight"}
-        </p>
-      )}
-
-      <UniverseChips state={state} registry={registry} />
-      <EventFeed events={state.feed} registry={registry} />
-      <Screenshots state={state} registry={registry} />
-
-      {comparisonError ? (
-        <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
-          {comparisonError}
-        </p>
-      ) : nothingToCompare ? (
-        <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-500">
-          Run complete, no comparable rows. Every universe either failed the location proof,
-          returned nothing usable, or produced no row that survived the validation gate.
-        </p>
-      ) : (
-        <ComparisonTable
-          comparison={comparison}
-          registry={registry}
-          query={state.query ?? ""}
-          pincode={state.pincode ?? ""}
-        />
-      )}
     </div>
   );
 }

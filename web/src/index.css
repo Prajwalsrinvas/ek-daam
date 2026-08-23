@@ -1,7 +1,36 @@
 @import "tailwindcss";
 
-/* Deliberately plain. A real design pass comes later; this only has to be
-   clean and readable. */
+/* EkDaam's design tokens. Two surfaces and nothing in between: the DECK is the
+   dark band where four collectors are working, the PAPER is the light band where
+   the receipt is printed. A colour that means a state (ok / bad / warn) is never
+   used for decoration, and a universe's hue always comes from the registry
+   (`universe.color`), never from this file. */
+:root {
+  --ink: #0b0f1a;
+  --ink-2: #121828;
+  --hair: rgba(230, 233, 242, 0.14);
+  --text: #e6e9f2;
+  --text-dim: #8a92a8;
+
+  --paper: #f6f3ec;
+  --paper-2: #fffdf7;
+  --paper-ink: #151a26;
+  --paper-dim: #5b6271;
+  --paper-hair: #d9d3c6;
+
+  --ok: #2fb36b;
+  --bad: #d13b3b;
+  --warn: #e0a100;
+
+  --font-display: "Bricolage Grotesque Variable", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  /* The deck's column gutter, shared by the portal deck and the receipt's
+     paylines so a price sits under the universe that quoted it. */
+  --gutter: 12px;
+}
+
 html,
 body,
 #root {
@@ -9,6 +38,397 @@ body,
 }
 
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus ring everywhere. `currentColor` means it inherits the surface it
+   lands on, so it is visible on the deck and on the paper without two rules. */
+:where(a, button, input, summary, [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input {
+  font: inherit;
+  border-radius: 0;
+}
+
+/* ---------------------------------------------------------------- type ---- */
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------- shapes ---- */
+
+.hair-t {
+  border-top: 1px solid var(--hair);
+}
+.hair-b {
+  border-bottom: 1px solid var(--hair);
+}
+
+.panel {
+  background: var(--ink-2);
+  border: 1px solid var(--hair);
+}
+
+/* A deck control: square, hairline, quiet until hovered. */
+.ctl {
+  border: 1px solid var(--hair);
+  background: transparent;
+  color: var(--text);
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.ctl:hover:not(:disabled) {
+  background: rgba(230, 233, 242, 0.07);
+  border-color: rgba(230, 233, 242, 0.32);
+}
+.ctl:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.ctl-strong {
+  background: var(--text);
+  color: var(--ink);
+  border-color: var(--text);
+  font-weight: 600;
+}
+.ctl-strong:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+  color: var(--ink);
+}
+
+.seg {
+  display: flex;
+  border: 1px solid var(--hair);
+}
+.seg > button {
+  padding: 7px 16px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.seg > button + button {
+  border-left: 1px solid var(--hair);
+}
+.seg > button:hover {
+  color: var(--text);
+}
+.seg > button[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.field {
+  background: #0a0e18;
+  border: 1px solid var(--hair);
+  color: var(--text);
+  padding: 7px 10px;
+}
+.field::placeholder {
+  color: #5d6478;
+}
+.field:focus {
+  border-color: rgba(230, 233, 242, 0.4);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hair);
+  background: rgba(230, 233, 242, 0.05);
+  padding: 4px 6px 4px 9px;
+  font-size: 13px;
+}
+
+.link {
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 120ms ease;
+}
+.link:hover {
+  color: var(--text);
+}
+
+/* ----------------------------------------------------------- portal deck ---- */
+
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  gap: var(--gutter);
+}
+@media (max-width: 1000px) {
+  .deck-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .deck-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The one glow in the app: a universe that is actively working. Its hue comes
+   from the registry through `--hue`, so nothing here decides a colour. */
+.portal--active {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--hue) 40%, transparent),
+    0 0 34px -14px var(--hue);
+}
+
+/* The COLUMN is what is capped, not the shelf inside it.
+   Capping the shelf instead left every column that had a shorter header than
+   its neighbours with dead space below its footer: the grid stretches all four
+   to the tallest, and a shelf that has hit its own ceiling cannot absorb the
+   difference. Capping the column and letting the shelf take whatever is left
+   between the header and the footer puts all four footers on one line. */
+.deck-grid > section {
+  max-height: 68vh;
+}
+
+.shelf {
+  /* `auto` basis, not 0: the shelf's own content still sets the column's natural
+     height (a basis of 0 collapsed every column to its header and footer), while
+     grow lets it absorb the extra when the grid stretches this column to match a
+     taller neighbour, and shrink plus min-height:0 lets it scroll instead of
+     pushing the footer past the column's cap. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(230, 233, 242, 0.22) transparent;
+}
+.shelf::-webkit-scrollbar {
+  width: 8px;
+}
+.shelf::-webkit-scrollbar-thumb {
+  background: rgba(230, 233, 242, 0.22);
+}
+
+.shelf-row {
+  animation: rise 260ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Only while a universe is collecting. Under reduced motion the animation is
+   dropped and the arc stays where it starts, which is the static 3/4 arc. */
+.aperture-sweep {
+  transform-origin: 28px 28px;
+  animation: sweep 1.5s linear infinite;
+}
+
+/* ------------------------------------------------------------- receipt ---- */
+
+.paper {
+  background: var(--paper);
+  color: var(--paper-ink);
+}
+
+.payline {
+  position: relative;
+}
+/* THE payline: one rule under a group, drawn left to right once. Solid for a
+   rules group, dashed for a model-suggested one. */
+.payline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid var(--paper-hair);
+  transform-origin: left center;
+  animation: draw 300ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.payline--model::after {
+  border-bottom-style: dashed;
+  border-bottom-color: #a9a294;
+}
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* One payline: the group on the left, one cell per universe, the honesty label
+   on the right. `--ucols` is however many universes the run actually has, so the
+   receipt's columns line up with the deck's above it. */
+.payline-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.05fr) repeat(var(--ucols, 3), minmax(0, 1fr)) 132px;
+  gap: 8px 14px;
+  align-items: start;
+}
+.only-narrow {
+  display: none;
+}
+@media (max-width: 900px) {
+  .payline-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .payline-grid > .payline-head,
+  .payline-grid > .payline-tag {
+    grid-column: 1 / -1;
+  }
+  .only-narrow {
+    display: block;
+  }
+  .wide-only {
+    display: none;
+  }
+}
+@media (max-width: 460px) {
+  .payline-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A band that scrolls inside itself says so at its bottom edge. The fade sits
+   over the container's own bottom padding, so it never dims a line of text. */
+.scroll-hint {
+  position: relative;
+}
+.scroll-hint-ink {
+  position: relative;
+}
+.scroll-hint-ink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--ink-2), transparent);
+}
+.scroll-hint::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--paper), transparent);
+}
+
+.paper-ctl {
+  border: 1px solid var(--paper-hair);
+  background: var(--paper-2);
+  color: var(--paper-ink);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.paper-ctl:hover {
+  background: #fff;
+  border-color: #b9b1a1;
+}
+
+.paper-link {
+  color: var(--paper-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: #bdb5a6;
+  transition: text-decoration-color 120ms ease;
+}
+.paper-link:hover {
+  text-decoration-color: var(--paper-ink);
+}
+
+.scroll-in {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* ------------------------------------------------------ flight recorder ---- */
+
+.recorder-tab {
+  writing-mode: vertical-rl;
+  letter-spacing: 0.16em;
+}
+/* A vertical tab down the right edge needs a right margin to live in, and a
+   narrow screen has none to give: it sat on top of the first universe's search
+   link. Below the deck's two-column breakpoint it docks to the bottom instead,
+   where nothing is competing for the space. */
+@media (max-width: 1000px) {
+  .recorder-tab {
+    writing-mode: horizontal-tb;
+    letter-spacing: 0.12em;
+    top: auto !important;
+    bottom: 14px;
+    right: 14px;
+    transform: none !important;
+    border-right: 1px solid var(--hair) !important;
+  }
+}
+
+.drawer {
+  transition: transform 220ms ease;
+}
+
+/* ------------------------------------------------------- motion budget ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

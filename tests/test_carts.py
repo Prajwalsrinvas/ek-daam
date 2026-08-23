@@ -218,6 +218,70 @@ def test_the_per_minute_window_is_charged_once_too(settings) -> None:
     assert codes == [202, 202, 429]
 
 
+# -- replaying a cart ---------------------------------------------------------
+# A cart is replayed by replaying each of its runs at once. The replay guards
+# used to be per client, which let item 1 through and refused the rest, so a
+# four-item demo card replayed as a one-item basket.
+def finished_cart(client: TestClient, items: list[str]) -> list[str]:
+    run_ids = [i["run_id"] for i in post_cart(client, items).json()["items"]]
+    for run_id in run_ids:
+        wait_for_done(client, run_id)
+    return run_ids
+
+
+def test_every_run_of_a_cart_replays_at_once(settings) -> None:
+    """The replay cooldown is charged per capture, not per client, so the second,
+    third and fourth items are not refused for the sin of following the first."""
+    cooled = dataclasses.replace(
+        settings, max_concurrent_runs=10, run_cooldown_s=60.0, replay_max_gap_s=2.0
+    )
+    with TestClient(create_app(cooled)) as client:
+        run_ids = finished_cart(client, ITEMS)
+
+        codes = [client.post(f"/api/replays/{run_id}").status_code for run_id in run_ids]
+
+    assert codes == [202, 202, 202, 202]
+
+
+def test_re_streaming_one_capture_twice_over_is_still_refused(settings) -> None:
+    """The guard that matters is unchanged: a second re-stream of the SAME
+    capture buys the client nothing and costs the process a task, a file handle
+    and every event in memory."""
+    paced = dataclasses.replace(settings, max_concurrent_runs=10, replay_max_gap_s=2.0)
+    with TestClient(create_app(paced)) as client:
+        run_ids = finished_cart(client, ["chips", "cake"])
+
+        first = client.post(f"/api/replays/{run_ids[0]}")
+        sibling = client.post(f"/api/replays/{run_ids[1]}")
+        again = client.post(f"/api/replays/{run_ids[0]}")
+
+    assert (first.status_code, sibling.status_code) == (202, 202)
+    assert again.status_code == 429
+    assert "already streaming" in again.json()["detail"]
+
+
+def test_the_replay_ceiling_is_one_carts_worth(settings) -> None:
+    """Still bounded: the cart size IS the ceiling, so the largest legitimate
+    burst fits and nothing beyond it does."""
+    small = dataclasses.replace(
+        settings, max_concurrent_runs=10, cart_max_items=2, replay_max_gap_s=2.0
+    )
+    with TestClient(create_app(small)) as client:
+        run_ids = finished_cart(client, ["chips", "cake"])
+        extra = client.post("/api/runs", json={"query": "candles", "pincode": "560001"})
+        third = extra.json()["run_id"]
+        wait_for_done(client, third)
+
+        codes = [
+            client.post(f"/api/replays/{run_id}").status_code
+            for run_id in [*run_ids, third]
+        ]
+        detail = client.post(f"/api/replays/{third}").json()["detail"]
+
+    assert codes == [202, 202, 429]
+    assert "at most 2 replays" in detail
+
+
 class SlowFakeBD:
     """A collector client that never finishes, so runs stay in flight for the
     length of a test. It spends nothing: no request leaves the process."""

@@ -143,6 +143,16 @@ def _new_run_id(prefix: str = "r") -> str:
     return f"{prefix}_{stamp}_{secrets.token_hex(2)}"
 
 
+def _replay_key(client_ip: str, source_run_id: str) -> str:
+    """What the replay cooldown is counted against: one client, one capture.
+
+    Counted per capture because a cart's items are replayed together and are
+    different captures. Re-streaming one capture over and over is what the
+    cooldown is for, and that is unchanged.
+    """
+    return f"{client_ip}|{source_run_id}"
+
+
 def _utc_date() -> str:
     """The day the daily run budget is keyed on. UTC, so it does not roll over
     twice or not at all depending on where the process happens to run."""
@@ -306,7 +316,9 @@ class RunManager:
         # `_active_runs`.
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._replay_tasks: dict[str, asyncio.Task[None]] = {}
-        self._replay_owner: dict[str, str] = {}
+        # replay run id -> (client ip, the capture it re-streams). Both halves
+        # are guards: see `_active_replays`.
+        self._replay_owner: dict[str, tuple[str, str]] = {}
         # Self-heal runs. Like replays they call no collector and spend no
         # scrape credits, so they never hold the single live slot. They ARE
         # capped at one at a time: Bright Data allows three concurrent AI jobs
@@ -435,12 +447,33 @@ class RunManager:
         slot would block a real run for nothing."""
         return sum(1 for task in self._tasks.values() if not task.done())
 
-    def _active_replays(self, client_ip: str) -> int:
+    def _active_replays(self, client_ip: str, source_run_id: str | None = None) -> int:
+        """Replays this client has in flight, of one capture or of all of them.
+
+        Both counts are needed because a cart is replayed by replaying each of
+        its items at once: what has to be refused is a SECOND re-stream of the
+        SAME capture, not the four different ones a cart legitimately starts.
+        """
         return sum(
             1
             for run_id, task in self._replay_tasks.items()
-            if not task.done() and self._replay_owner.get(run_id) == client_ip
+            if not task.done()
+            and (owner := self._replay_owner.get(run_id)) is not None
+            and owner[0] == client_ip
+            and (source_run_id is None or owner[1] == source_run_id)
         )
+
+    def _max_concurrent_replays(self) -> int:
+        """The ceiling on one client's re-streams, which is one cart's worth.
+
+        A cart is the largest burst of replays there is a legitimate reason for
+        (CONTRACT: a cart is replayed by replaying each item concurrently), so
+        the cart size IS the ceiling: raising `SVERSE_CART_MAX_ITEMS` for bigger
+        carts gives their replays the matching headroom automatically. It stays a
+        ceiling, because a re-stream still holds a task, a file handle and every
+        event in memory.
+        """
+        return max(self.settings.cart_max_items, 1)
 
     def _prune_memory(self) -> None:
         """Drop finished runs beyond the working set.
@@ -1169,9 +1202,25 @@ class RunManager:
         # Replays were the one entrance with no guard on it at all: any client
         # could open unbounded concurrent re-streams, each holding a task, a
         # file handle and every event in memory.
-        if self._active_replays(client_ip) >= 1:
-            raise RunThrottled("a replay is already streaming for this client. Wait for it to end")
-        self._check_cooldown(client_ip, self._last_replay_at, what="replay")
+        #
+        # PER CAPTURE, not per client, and the difference is the cart: its items
+        # are separate runs replayed at once, so a flat "one replay per client"
+        # let item 1 through and refused the other three. Re-streaming the SAME
+        # capture twice over is still the thing being refused - it is the one
+        # that buys the client nothing and costs the process everything - and the
+        # ceiling below keeps the total bounded whatever is being replayed.
+        if self._active_replays(client_ip) >= self._max_concurrent_replays():
+            raise RunThrottled(
+                f"at most {self._max_concurrent_replays()} replays stream at once "
+                "for one client. Wait for one to end"
+            )
+        if self._active_replays(client_ip, source_run_id) >= 1:
+            raise RunThrottled(
+                "a replay of that capture is already streaming for this client. "
+                "Wait for it to end"
+            )
+        replay_key = _replay_key(client_ip, source_run_id)
+        self._check_cooldown(replay_key, self._last_replay_at, what="replay")
 
         source_dir = self.read_dir(source_run_id)
         if source_dir is None:
@@ -1208,8 +1257,8 @@ class RunManager:
         self._rows[run_id] = {}
         self._write_meta(meta)
 
-        self._last_replay_at[client_ip] = time.monotonic()
-        self._replay_owner[run_id] = client_ip
+        self._last_replay_at[replay_key] = time.monotonic()
+        self._replay_owner[run_id] = (client_ip, source_run_id)
         self._replay_tasks[run_id] = asyncio.create_task(
             self._stream_replay(store, meta, events)
         )

@@ -17,10 +17,22 @@ Built for Into the Scrape-Verse, the hackathon run by WeMakeDevs with Bright Dat
 - Normalizes prices, pack sizes, stock state, delivery estimates, and sponsorship.
 - Groups listings only when brand, pack size, variant, and product names agree.
 - Shows unmatched products separately instead of forcing a comparison.
-- Stores each run locally so a completed run can be replayed from the UI.
+- Adds a second, labelled layer of matches suggested by a language model, drawn
+  beside the rule-based receipt and never mixed into it.
+- Compares a whole cart: up to six products at one pincode run together, with
+  the basket total per app and how many of the items each app could price.
+- Stores each run locally so a completed run can be replayed from the UI, and
+  serves a curated list of real captures as the demo anyone can open.
 
 Matches are heuristic. The original listing name remains visible so the result can
-be checked before comparing prices.
+be checked before comparing prices. Rule-based groups are labelled `close`, never
+`exact`. Model-suggested groups are drawn as dashed lines and labelled
+`model-suggested` with the model's own `high` or `low` confidence; the model only
+ever returns product ids, so every name and price on the page was captured by a
+collector, and every suggested group is re-checked by the same deterministic
+guards (same brand and pack size, different shops, no id used twice) before it is
+shown. Set `OPENROUTER_API_KEY` to turn the layer on; without it the receipt is
+rules only.
 
 ## Run locally
 
@@ -65,6 +77,9 @@ SVERSE_COLLECTOR_VERSION=prod
 SVERSE_CHAOS_VERSION=v1
 SVERSE_CHAOS_ADMIN_TOKEN=
 SVERSE_DEMO_RUN_ID=
+SVERSE_DEMO_FILE=runs/demo.json
+OPENROUTER_API_KEY=
+SVERSE_MAX_CONCURRENT_RUNS=6
 ```
 
 `SVERSE_COLLECTOR_CHAOS` is the demo store's collector; leave it empty and that
@@ -74,18 +89,25 @@ runtime only through `POST /api/chaos/flip`.
 `SVERSE_CHAOS_ADMIN_TOKEN` is the shared secret for the two chaos admin
 endpoints, sent as the `X-Chaos-Token` header; empty means disabled, and both
 endpoints answer 503.
-`SVERSE_DEMO_RUN_ID` names the one run id that is readable and replayable by
-anyone; empty means there is no public run and the UI offers no demo button.
+`SVERSE_DEMO_RUN_ID` names one run id that is readable and replayable by anyone.
+`SVERSE_DEMO_FILE` points at a JSON list of demo entries (single runs, carts, or
+a story of chapters); every run id it names is public, and the UI's **Watch a
+demo** strip is built from it. Both empty means there is no public run and no
+demo strip.
+`OPENROUTER_API_KEY` turns on the model-suggested matching layer; empty leaves
+the receipt rules only.
+`SVERSE_MAX_CONCURRENT_RUNS` must be at least the cart size you want to allow: a
+cart is admitted all or nothing, one run per item.
 
 Collector IDs and API keys stay in the environment. The collector source used by
 the app is included in [`collectors/`](collectors/README.md).
 
 After a run completes, click **Replay this run** to stream its saved events again.
 Replay runs are visibly labelled and do not call Bright Data. Past runs from the
-same browser are listed under **My runs**, each with its own replay button. One
-run can be published to every visitor by naming it in `SVERSE_DEMO_RUN_ID`: while
-that is set, the landing state offers a **Replay the demo capture** button that
-needs no run of your own.
+same browser are listed under **My runs**, each with its own replay button. Real
+captures can be published to every visitor through the demo list: the **Watch a
+demo** strip replays them, clearly labelled as replays, with no run of your own
+and no collector being paid for.
 
 ## The chaos store
 
@@ -146,6 +168,9 @@ number. It is kept out of the published repository.
 | `GET` | `/api/runs/{id}` | Read a run and its comparison |
 | `GET` | `/api/runs/{id}/events` | Stream run events over SSE |
 | `POST` | `/api/replays/{id}` | Replay a completed run |
+| `POST` | `/api/carts` | Start one run per item of a cart, all at once |
+| `GET` | `/api/carts` | List this browser's carts |
+| `GET` | `/api/carts/{id}` | Read a cart and its run ids |
 | `GET` | `/api/chaos` | Demo store rendering and admin state |
 | `POST` | `/api/chaos/flip` | Switch the demo store rendering (token, header `X-Chaos-Token`) |
 | `POST` | `/api/chaos/heal` | Start a self-heal run for the chaos collector (token, header `X-Chaos-Token`) |
