@@ -27,8 +27,17 @@ from .product_links import product_url as build_product_url
 
 # `close` = same brand token, same base pack size, same variant, and the product
 # names agree. It is a heuristic and says so. There is deliberately no stronger
-# label: this resolver has no product identity to be certain about.
-Confidence = Literal["close", "unmatched"]
+# label THIS RESOLVER can emit: it has no product identity to be certain about.
+#
+# `high` and `low` belong to the separate, labelled model layer
+# (server/llm_match.py) and never appear on a group whose `source` is "rules".
+# They share the field so one type describes every group the UI has to draw.
+Confidence = Literal["close", "unmatched", "high", "low"]
+
+# Who put a group together. Everything this module builds is "rules"; the model
+# layer marks its own additions "model" so the two can never be confused in a
+# payload, a stored run or a screenshot.
+GroupSource = Literal["rules", "model"]
 
 # Universes whose rows are demonstration data, not shop data. `chaos` points at
 # the store this app serves itself, so its prices are invented; putting an
@@ -110,8 +119,32 @@ class ComparisonGroup(BaseModel):
     unit: str | None = None
     variant: str | None = None
     confidence: Confidence = "unmatched"
+    source: GroupSource = "rules"
     universes: list[str] = Field(default_factory=list)
     rows: list[NormalizedRow] = Field(default_factory=list)
+
+
+class LlmSummary(BaseModel):
+    """What the model layer did on this run, or why it did nothing.
+
+    Every field is nullable because every one of them is unknown until the phase
+    has actually run: a run that skipped carries a status and a reason and
+    nothing else. Reported so the UI can say what happened rather than showing an
+    empty section. See server/llm_match.py.
+    """
+
+    status: Literal["done", "failed", "skipped"] | None = None
+    model: str | None = None
+    seconds: float | None = None
+    blocks: int | None = None
+    rows_sent: int | None = None
+    # Groups that cleared every guard, and groups the guards threw out. A group
+    # counted here can still be absent from `Comparison.llm_groups`: one that
+    # merely reproduces a rules group is dropped, so the list stays "what the
+    # model adds" while the count stays "what the model got right".
+    accepted: int | None = None
+    rejected: int | None = None
+    reason: str | None = None
 
 
 class Comparison(BaseModel):
@@ -125,6 +158,12 @@ class Comparison(BaseModel):
     `row_count` and `universe_count` describe the comparison, so they count the
     real universes only. A demo row that inflated the run's row total would make
     the run look like it read more shops than it did.
+
+    `llm_groups` and `llm` are the ADDITIONAL model layer, filled in by
+    server/llm_match.py after `match()` has finished. They are separate fields
+    rather than extra entries in `groups` so that nothing a model said can ever
+    be mistaken for part of the deterministic receipt. Empty and null on a run
+    that never asked a model, which keeps the type the same for every run.
     """
 
     groups: list[ComparisonGroup] = Field(default_factory=list)
@@ -132,6 +171,8 @@ class Comparison(BaseModel):
     row_count: int = 0
     universe_count: int = 0
     demo_rows: list[NormalizedRow] = Field(default_factory=list)
+    llm_groups: list[ComparisonGroup] = Field(default_factory=list)
+    llm: LlmSummary | None = None
 
 
 def normalize_unit(unit: str | None) -> str | None:

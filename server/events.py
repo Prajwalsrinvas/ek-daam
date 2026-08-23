@@ -38,6 +38,9 @@ class EventType(StrEnum):
     RETRIGGERED = "retriggered"
     FAILED = "failed"
     TIMED_OUT = "timed_out"
+    # The model-assisted matching pass, run once per run between the last
+    # universe and `done`. Run level, so its `universe` is null.
+    LLM_MATCH = "llm_match"
     DONE = "done"
 
     # Reserved for the self-healing pass — defined now, not implemented.
@@ -62,6 +65,7 @@ IMPLEMENTED_EVENT_TYPES = frozenset(
         EventType.RETRIGGERED,
         EventType.FAILED,
         EventType.TIMED_OUT,
+        EventType.LLM_MATCH,
         EventType.DONE,
     }
 )

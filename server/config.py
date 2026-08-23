@@ -18,6 +18,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 UNIVERSE_IDS = ("zepto", "blinkit", "instamart", "chaos")
 
+# The model the assist layer asks by default (server/llm_match.py). Measured in
+# spike/llm-match: free, and the fastest of the models tried at this job.
+DEFAULT_LLM_MODEL = "stealth/ox-alpha"
+
 # No pincode table lives here any more. The app takes any valid Indian pincode
 # (validated in `runs.py`) and sends exactly that to the collector, which types
 # it into the site. Coordinates were never read by any collector, so carrying
@@ -84,10 +88,33 @@ class Settings:
     # while the rest of the demo stays on the published prod ones.
     collector_versions: dict[str, str] = field(default_factory=dict)
     fixtures_dir: Path = field(default=REPO_ROOT / "tests" / "fixtures")
+    # Items one cart may hold. A cart starts one run per item at once, so this is
+    # also how many collector jobs one click can spend.
+    cart_max_items: int = 6
+    # Where the curated demo list is read from (SVERSE_DEMO_FILE). None means
+    # `demo.json` inside the runs directory, so a test with a runs directory of
+    # its own can never pick up a deployment's list. See server/demo.py.
+    demo_file: Path | None = None
+    # The model layer (server/llm_match.py). Empty key = the layer is off, which
+    # is the state of every deployment that has not opted into it. The key is
+    # read here and passed to the client; it is never logged and never stored.
+    openrouter_api_key: str = ""
+    llm_model: str = DEFAULT_LLM_MODEL
+    # Wall budget for the whole phase, not per call. Measured: 15 parallel block
+    # calls finished in 8s, so 30s is well clear of a slow one.
+    llm_timeout_s: float = 30.0
+    # The off switch that does not need the key removed.
+    llm_enabled: bool = True
 
     @property
     def is_live(self) -> bool:
         return self.bd_mode == "live"
+
+    @property
+    def demo_list_path(self) -> Path:
+        """The demo list file. Inside the runs directory unless one is named, so
+        it moves with `SVERSE_RUNS_DIR` rather than being pinned to the repo."""
+        return self.demo_file if self.demo_file is not None else self.runs_dir / "demo.json"
 
     def store_map_for(self, universe_id: str) -> dict[str, frozenset[str]]:
         """pincode -> known store ids for one universe. Empty = nothing to
@@ -285,6 +312,17 @@ def build_settings() -> Settings:
     if not fixtures_dir.is_absolute():
         fixtures_dir = REPO_ROOT / fixtures_dir
 
+    demo_file: Path | None = None
+    raw_demo_file = (os.getenv("SVERSE_DEMO_FILE") or "").strip()
+    if raw_demo_file:
+        demo_file = Path(raw_demo_file)
+        if not demo_file.is_absolute():
+            demo_file = REPO_ROOT / demo_file
+
+    # Unset means on: the layer already refuses to run without a key, so the flag
+    # only has to answer "a key is configured but leave it alone tonight".
+    llm_enabled = _bool("SVERSE_LLM_ENABLED")
+
     return Settings(
         bd_api_key=os.getenv("BD_API_KEY", "").strip(),
         bd_mode=mode,
@@ -329,7 +367,17 @@ def build_settings() -> Settings:
             _clamped("SVERSE_DAILY_RUN_BUDGET", _int("SVERSE_DAILY_RUN_BUDGET", 300), 1, 300)
         ),
         demo_run_id=os.getenv("SVERSE_DEMO_RUN_ID", "").strip(),
+        demo_file=demo_file,
         cookie_secure=_bool("SVERSE_COOKIE_SECURE"),
+        cart_max_items=int(
+            _clamped("SVERSE_CART_MAX_ITEMS", _int("SVERSE_CART_MAX_ITEMS", 6), 1, 6)
+        ),
+        openrouter_api_key=os.getenv("OPENROUTER_API_KEY", "").strip(),
+        llm_model=(os.getenv("SVERSE_LLM_MODEL") or "").strip() or DEFAULT_LLM_MODEL,
+        llm_timeout_s=_clamped(
+            "SVERSE_LLM_TIMEOUT_S", _float("SVERSE_LLM_TIMEOUT_S", 30.0), 1.0, 30.0
+        ),
+        llm_enabled=True if llm_enabled is None else llm_enabled,
     )
 
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Annotated, Any
 
 import logging
 import re
@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from .bd_client import initials_png
+from .carts import public_cart
 from .chaos_store import (
     VERSIONS,
     ChaosStore,
@@ -53,6 +54,22 @@ class RunRequest(BaseModel):
     with a sentence a person can act on rather than as a pydantic 422."""
 
     query: str = Field(max_length=200)
+    pincode: str = Field(max_length=20)
+
+
+# Outer bounds for a cart body, in the same spirit as `RunRequest`: the real
+# rules - how many items a cart may hold, what an item may say - live in
+# `RunManager._validate_cart`, which answers with a sentence instead of a 422.
+CART_ITEMS_OUTER_MAX = 50
+CART_ITEM_OUTER_MAX_LEN = 200
+
+
+class CartRequest(BaseModel):
+    """A shopping list at one pincode. One run per item, all at once."""
+
+    items: list[Annotated[str, Field(max_length=CART_ITEM_OUTER_MAX_LEN)]] = Field(
+        max_length=CART_ITEMS_OUTER_MAX
+    )
     pincode: str = Field(max_length=20)
 
 
@@ -155,8 +172,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         which is exactly the fact a stranger would be probing for. A run that is
         not yours is indistinguishable from a run that is not there.
         """
-        meta = manager(request).load_meta(run_id)
-        if meta is None or not owns(meta, owner_of(request), settings.demo_run_id):
+        runs = manager(request)
+        meta = runs.load_meta(run_id)
+        if meta is None or not owns(meta, owner_of(request), runs.public_run_ids()):
             raise HTTPException(status_code=404, detail=f"no run {run_id!r}")
         return meta
 
@@ -192,7 +210,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # -- registry --------------------------------------------------------
     @app.get("/api/universes")
-    async def get_universes() -> dict[str, Any]:
+    async def get_universes(request: Request) -> dict[str, Any]:
         # `listed`, not `universes`: a registry row with no mapper can never be
         # dispatched, and a permanently dead chip in the UI reads as a broken
         # feature rather than an unbuilt one.
@@ -209,7 +227,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "query_allowlist": list(settings.query_allowlist),
             # The one capture anyone may replay without having run anything.
             # Null when none is configured, and the UI hides the button then.
+            # Kept for compatibility: the list below is what the UI reads now,
+            # and this id is the last entry of it when it is set.
             "demo_run_id": settings.demo_run_id or None,
+            # The curated demo menu. Every run id named here is public. Possibly
+            # empty, which is a deployment with nothing curated yet rather than
+            # an error. See server/demo.py.
+            "demo": [entry.model_dump() for entry in manager(request).demo_entries()],
         }
 
     @app.get("/api/health")
@@ -339,6 +363,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except RunRejected as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         return {"run_id": meta.run_id, "meta": public_meta(meta)}
+
+    # -- carts -----------------------------------------------------------
+    # A cart is N runs at one pincode, started together. There is deliberately no
+    # cart-level stream and no cart-level comparison: its runs are ordinary runs,
+    # so the UI subscribes to each one's SSE and replays a cart by replaying each
+    # of them. See server/carts.py.
+    @app.post("/api/carts", status_code=202)
+    async def post_cart(body: CartRequest, request: Request) -> dict[str, Any]:
+        try:
+            cart = manager(request).create_cart(
+                body.items, body.pincode, _client_ip(request), owner_of(request)
+            )
+        except RunThrottled as exc:
+            # Must be caught before RunRejected - it is a subclass.
+            raise HTTPException(status_code=429, detail=str(exc)) from exc
+        except RunRejected as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return public_cart(cart)
+
+    @app.get("/api/carts")
+    async def list_carts(request: Request, limit: int = 25) -> dict[str, Any]:
+        """THIS VISITOR'S carts, newest first. Scoped like the run listing."""
+        limit = max(1, min(limit, 100))
+        carts = manager(request).list_carts(owner_of(request), limit)
+        return {"carts": [public_cart(cart) for cart in carts]}
+
+    @app.get("/api/carts/{cart_id}")
+    async def get_cart(cart_id: str, request: Request) -> dict[str, Any]:
+        # 404 rather than 403, the same way a run that is not yours is a 404: a
+        # cart id that exists is exactly what a stranger would be probing for.
+        cart = manager(request).load_cart(cart_id)
+        owner = owner_of(request)
+        mine = bool(cart and cart.owner_hash and owner) and _secrets.compare_digest(
+            cart.owner_hash or "", owner
+        )
+        if cart is None or not mine:
+            raise HTTPException(status_code=404, detail=f"no cart {cart_id!r}")
+        return public_cart(cart)
 
     # -- the chaos store -------------------------------------------------
     # A grocery store this app serves itself, so the reliability story can be

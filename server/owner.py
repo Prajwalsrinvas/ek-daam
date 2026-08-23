@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import re
 import secrets
+from collections.abc import Collection
 
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.responses import Response
@@ -59,15 +60,16 @@ def owner_of(request) -> str:
     return state.get(SCOPE_KEY, "")
 
 
-def owns(meta, owner_hash: str, demo_run_id: str = "") -> bool:
+def owns(meta, owner_hash: str, public_run_ids: Collection[str] = ()) -> bool:
     """Whether this requester may see this run.
 
-    The demo run is public BY DESIGN: it is the one capture the judges can open
-    without having run anything themselves. Everything else needs a matching
-    owner hash, and a run with no owner (captured before ownership existed)
-    matches nobody.
+    The demo runs are public BY DESIGN: they are the captures the judges can open
+    without having run anything themselves, and which ids those are comes from
+    the curated list in server/demo.py. Everything else needs a matching owner
+    hash, and a run with no owner (captured before ownership existed) matches
+    nobody.
     """
-    if demo_run_id and meta.run_id == demo_run_id:
+    if meta.run_id in public_run_ids:
         return True
     stored = getattr(meta, "owner_hash", None)
     if not stored or not owner_hash:

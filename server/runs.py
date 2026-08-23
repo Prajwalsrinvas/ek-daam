@@ -23,7 +23,11 @@ from typing import Any, Iterable
 from pydantic import BaseModel, Field
 
 from .bd_client import BDError, JobLog, build_client
+from .carts import CartItem, CartMeta, load_cart, new_cart_id, write_cart
+from .carts import list_carts as list_stored_carts
 from .config import Settings
+from .demo import DemoEntry, load_demo_entries
+from .demo import public_run_ids as demo_public_run_ids
 from .events import Event, EventStore, EventType, read_events_file, utc_now_iso
 from .heal import (
     DEFAULT_CUSTOM_INPUT,
@@ -32,6 +36,7 @@ from .heal import (
     run_heal_cycle,
     validate_prompt,
 )
+from .llm_match import LlmOutcome, run_llm_match
 from .mappers import (
     as_records,
     get_mapper,
@@ -39,10 +44,14 @@ from .mappers import (
     unwrap_record,
 )
 from .registry import Universe, collector_id_for, dispatchable
-from .resolve import Comparison, NormalizedRow, match
+from .resolve import Comparison, ComparisonGroup, LlmSummary, NormalizedRow, match
 
 RUN_ID_RE = re.compile(r"^r(?:p)?_\d{8}_\d{6}_[0-9a-f]{4}$")
 ARTIFACT_NAME_RE = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
+
+# Where a run keeps what the model layer found. Beside `events.jsonl` and
+# `meta.json`, and read back by `comparison_for`.
+LLM_FILENAME = "llm.json"
 
 # Any Indian pincode: six digits, and no postal circle starts at 0. Open on
 # purpose — a live user types their own, and the collector types it into the
@@ -377,7 +386,7 @@ class RunManager:
                 f"try again in {int(cooldown - elapsed) + 1}s"
             )
 
-    def _check_daily_budget(self) -> None:
+    def _check_daily_budget(self, count: int = 1) -> None:
         """One budget for the whole day, shared by every client.
 
         The per-IP cooldown paces one visitor; nothing paced the sum of them, so
@@ -388,12 +397,16 @@ class RunManager:
         LIVE runs only. Replays re-stream a stored file and self-heals drive the
         AI flow; neither calls a collector, and both are created through paths of
         their own that never reach this check.
+
+        `count` is how many runs are about to start: a cart asks for room for all
+        of its items at once, because starting some of them and refusing the rest
+        would leave the shopper with half a comparison.
         """
         today = _utc_date()
         if today != self._budget_day:
             self._budget_day = today
             self._budget_used = 0
-        if self._budget_used >= self.settings.daily_run_budget:
+        if self._budget_used + count > self.settings.daily_run_budget:
             # Throttled, not rejected: the request is fine, the day is spent.
             raise RunThrottled(
                 "daily live-run budget reached, try tomorrow or watch the demo replay"
@@ -456,17 +469,13 @@ class RunManager:
             self._replay_owner.pop(run_id, None)
             self._heal_tasks.pop(run_id, None)
 
-    def _validate_request(self, query: str, pincode: str) -> tuple[str, str]:
-        """Open inputs: any Indian pincode, any sane query.
+    def _validate_query(self, raw: str) -> str:
+        """The rules one search has to clear, whatever asked for it.
 
-        The old build only accepted an allowlisted pincode it could look up
-        coordinates for. Nothing needs those coordinates, so the only questions
-        left are whether the pincode is well formed and whether the query is
-        something a person could have typed.
+        Shared by a run and by every item of a cart, so a cart cannot smuggle
+        past a bound a single run is held to.
         """
-        query = normalize_query(query)
-        pincode = (pincode or "").strip()
-
+        query = normalize_query(raw)
         if not query:
             raise RunRejected("query is empty")
         if len(query) < QUERY_MIN_LEN:
@@ -475,16 +484,22 @@ class RunManager:
             raise RunRejected(f"query is longer than {QUERY_MAX_LEN} characters")
         if not query.isprintable():
             raise RunRejected("query contains non-printable characters")
-        if not PINCODE_RE.match(pincode):
-            raise RunRejected(
-                f"pincode {pincode!r} is not a 6-digit Indian pincode (e.g. 560001)"
-            )
         if not self.settings.query_allowed(query):
             raise RunRejected(
                 f"query {query!r} is not on the demo allowlist. "
                 f"Allowed: {', '.join(self.settings.query_allowlist)}"
             )
+        return query
 
+    def _validate_pincode(self, raw: str) -> str:
+        pincode = (raw or "").strip()
+        if not PINCODE_RE.match(pincode):
+            raise RunRejected(
+                f"pincode {pincode!r} is not a 6-digit Indian pincode (e.g. 560001)"
+            )
+        return pincode
+
+    def _require_a_target(self) -> list[Universe]:
         targets = dispatchable(self.settings)
         if not targets:
             raise RunRejected(
@@ -492,7 +507,35 @@ class RunManager:
                 + ("wire a collector id in the environment" if self.settings.is_live
                    else "no mock fixture is available")
             )
+        return targets
+
+    def _validate_request(self, query: str, pincode: str) -> tuple[str, str]:
+        """Open inputs: any Indian pincode, any sane query.
+
+        The old build only accepted an allowlisted pincode it could look up
+        coordinates for. Nothing needs those coordinates, so the only questions
+        left are whether the pincode is well formed and whether the query is
+        something a person could have typed.
+        """
+        query = self._validate_query(query)
+        pincode = self._validate_pincode(pincode)
+        self._require_a_target()
         return query, pincode
+
+    def _build_client(self) -> Any:
+        """A collector client, or an honest 400.
+
+        Built BEFORE the run exists. `LiveClient` refuses to start without
+        BD_API_KEY, and finding that out inside the run task created a run that
+        was stranded the moment it was created: a run id, a directory, a
+        `run_requested` event and then a `failed` the caller had already been
+        told 202 about. It is a configuration error, so it is a 400 with the
+        reason in it.
+        """
+        try:
+            return build_client(self.settings)
+        except BDError as exc:
+            raise RunRejected(f"cannot start a run: {exc}") from exc
 
     # -- run creation ----------------------------------------------------
     def create_run(
@@ -515,18 +558,23 @@ class RunManager:
         if self.settings.is_live:
             self._check_daily_budget()
 
-        # Build the client BEFORE the run exists. `LiveClient` refuses to start
-        # without BD_API_KEY, and finding that out inside the run task created a
-        # run that was stranded the moment it was created: a run id, a directory,
-        # a `run_requested` event and then a `failed` the caller had already been
-        # told 202 about. It is a configuration error, so it is a 400 with the
-        # reason in it.
-        try:
-            client = build_client(self.settings)
-        except BDError as exc:
-            raise RunRejected(f"cannot start a run: {exc}") from exc
+        client = self._build_client()
+        meta = self._start_run(query, pincode, client, owner_hash)
+        # Stamped only once the run is really being created, so a request refused
+        # by any later guard never costs the client its next window.
+        self._last_run_at[client_ip] = time.monotonic()
+        self._prune_memory()
+        return meta
 
-        targets = dispatchable(self.settings)
+    def _start_run(
+        self, query: str, pincode: str, client: Any, owner_hash: str | None
+    ) -> RunMeta:
+        """Create one run and put it in flight. Every guard has already passed.
+
+        Separate from `create_run` because a cart starts several of these and
+        must charge the per-client guards ONCE for the lot: see `create_cart`.
+        """
+        targets = self._require_a_target()
         run_id = _new_run_id("r")
         run_dir = self.settings.runs_dir / run_id
         store = EventStore(run_id, run_dir)
@@ -546,13 +594,113 @@ class RunManager:
         self._rows[run_id] = {}
         self._write_meta(meta)
 
-        self._last_run_at[client_ip] = time.monotonic()
-        # Stamped only once the run is really being created, so a request refused
-        # by any later guard never costs the day a slot.
         self._spend_budget()
         self._tasks[run_id] = asyncio.create_task(self._drive(store, meta, targets, client))
-        self._prune_memory()
         return meta
+
+    # -- carts -----------------------------------------------------------
+    def _validate_cart(self, items: list[str], pincode: str) -> tuple[list[str], str]:
+        """The list a cart really starts: validated, trimmed and deduplicated.
+
+        Duplicates go before the count is checked, because "chips, Chips" is one
+        thing a shopper wanted twice, not two items of their six.
+        """
+        pincode = self._validate_pincode(pincode)
+        queries: list[str] = []
+        seen: set[str] = set()
+        for raw in items or []:
+            query = self._validate_query(raw)
+            if query.lower() in seen:
+                continue
+            seen.add(query.lower())
+            queries.append(query)
+
+        if not queries:
+            raise RunRejected("a cart needs at least one item")
+        if len(queries) > self.settings.cart_max_items:
+            raise RunRejected(
+                f"a cart holds at most {self.settings.cart_max_items} items, "
+                f"got {len(queries)}"
+            )
+        self._require_a_target()
+        return queries, pincode
+
+    def create_cart(
+        self,
+        items: list[str],
+        pincode: str,
+        client_ip: str = "local",
+        owner_hash: str | None = None,
+    ) -> CartMeta:
+        """One shopping list at one pincode: one ordinary run per item, at once.
+
+        ALL OR NOTHING. Every guard is checked against the whole cart before a
+        single run starts, because half a cart is worse than a refused one: the
+        shopper watches four items, sees two of them run, and has no way to tell
+        whether the other two failed or were never started.
+
+        ONE user action, so the per-client cooldown and the per-minute window are
+        charged once between them rather than once per item. Charging per item
+        would make a cart of six impossible against a limit of five and would
+        lock the visitor out for the cooldown as well. The DAILY collector budget
+        is different and is charged per item, because that is exactly how many
+        collector jobs a cart really spends.
+        """
+        queries, pincode = self._validate_cart(items, pincode)
+
+        free = self.settings.max_concurrent_runs - self._active_runs()
+        if len(queries) > free:
+            raise RunThrottled(
+                f"a cart of {len(queries)} items needs {len(queries)} run slots, "
+                f"{max(free, 0)} free of {self.settings.max_concurrent_runs}. "
+                "Wait for the runs in flight, or send fewer items"
+            )
+        self._check_cooldown(client_ip)
+        self._check_rate(client_ip)
+        if self.settings.is_live:
+            self._check_daily_budget(len(queries))
+
+        # One client per run, all built before any run starts. The refusal
+        # depends only on settings, so it happens on the first one or not at all
+        # - there is no half-built cart to unwind.
+        clients = [self._build_client() for _ in queries]
+
+        cart = CartMeta(
+            cart_id=new_cart_id(),
+            pincode=pincode,
+            created_at=utc_now_iso(),
+            owner_hash=owner_hash,
+        )
+        for query, client in zip(queries, clients):
+            meta = self._start_run(query, pincode, client, owner_hash)
+            cart.items.append(CartItem(item=query, run_id=meta.run_id))
+        write_cart(self.settings, cart)
+
+        self._last_run_at[client_ip] = time.monotonic()
+        self._prune_memory()
+        return cart
+
+    def load_cart(self, cart_id: str) -> CartMeta | None:
+        return load_cart(self.settings, cart_id)
+
+    def list_carts(self, owner_hash: str | None, limit: int = 25) -> list[CartMeta]:
+        return list_stored_carts(self.settings, owner_hash, limit)
+
+    # -- the demo list ---------------------------------------------------
+    def demo_entries(self) -> list[DemoEntry]:
+        """The curated list of captures anyone may open. See server/demo.py."""
+        return load_demo_entries(
+            self.settings.demo_list_path, self._query_of, self.settings.demo_run_id
+        )
+
+    def public_run_ids(self) -> frozenset[str]:
+        """Every run id the demo list makes readable and replayable by anyone."""
+        return demo_public_run_ids(self.demo_entries(), self.settings.demo_run_id)
+
+    def _query_of(self, run_id: str) -> str | None:
+        """What a stored run searched for, or None if there is no such run."""
+        meta = self.load_meta(run_id)
+        return meta.query if meta else None
 
     def _write_meta(self, meta: RunMeta) -> None:
         path = self.settings.runs_dir / meta.run_id / "meta.json"
@@ -580,6 +728,10 @@ class RunManager:
             )
             rows = self._rows.get(meta.run_id, {})
             comparison = match(rows)
+            # The model layer, on the SAME rows, after the receipt is final and
+            # before the run says it is done. It never edits `comparison`: what
+            # it produces is stored beside it and reported under its own name.
+            await self._llm_phase(store, meta, rows, comparison)
             await store.append(
                 EventType.DONE,
                 {
@@ -611,6 +763,68 @@ class RunManager:
             with contextlib.suppress(Exception):
                 await client.aclose()
             await store.close()
+
+    async def _llm_phase(
+        self,
+        store: EventStore,
+        meta: RunMeta,
+        rows: dict[str, list[NormalizedRow]],
+        comparison: Comparison,
+    ) -> None:
+        """Run the model layer for a live capture, and store what it found.
+
+        LIVE CAPTURES ONLY, and silent otherwise. A replay re-streams the
+        `llm_match` events the capture already recorded, so asking again would
+        both cost a call and risk contradicting the run being replayed. A mock
+        run has no shop rows to reason about, and a self-heal has no comparison
+        at all. Neither of those emits so much as a `skipped`: an event about a
+        layer that was never going to run is noise in a feed people read.
+        """
+        if not self.settings.is_live:
+            return
+        outcome = await run_llm_match(store, self.settings, rows, comparison)
+        self._write_llm(meta.run_id, outcome)
+
+    def _write_llm(self, run_id: str, outcome: LlmOutcome) -> None:
+        """Persist the model layer next to the run it belongs to.
+
+        Kept out of `events.jsonl` and out of `meta.json`: the events record what
+        happened and the meta records what was asked for, while this is a derived
+        artifact of the run. Written because `comparison_for` rebuilds the
+        receipt from raw rows every time it is asked, and a model answer cannot
+        be rebuilt - re-deriving it would mean a second call, a second answer and
+        a stored run that reads differently every time it is opened.
+        """
+        path = self.settings.runs_dir / run_id / LLM_FILENAME
+        payload = {
+            "llm": outcome.summary.model_dump(),
+            "llm_groups": [group.model_dump() for group in outcome.groups],
+        }
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _read_llm(self, run_id: str) -> tuple[list[ComparisonGroup], LlmSummary | None]:
+        """The stored model layer, or nothing at all.
+
+        A run captured before this existed, a mock run and a run still in flight
+        all land here identically: no file, so no groups and a null summary. That
+        is what keeps the snapshot's shape the same for every run.
+        """
+        run_dir = self.read_dir(run_id)
+        if run_dir is None:
+            return [], None
+        path = run_dir / LLM_FILENAME
+        if not path.is_file():
+            return [], None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            groups = [ComparisonGroup.model_validate(g) for g in payload.get("llm_groups", [])]
+            summary = payload.get("llm")
+            return groups, LlmSummary.model_validate(summary) if summary else None
+        except Exception:
+            # A layer that cannot be read is reported as absent rather than as an
+            # error: the receipt beside it is intact and is the part that matters.
+            return [], None
 
     async def _run_universe(
         self,
@@ -1254,7 +1468,17 @@ class RunManager:
         return out
 
     def comparison_for(self, run_id: str) -> Comparison:
-        return match(self.rows_for(run_id))
+        """The receipt, plus whatever the model layer added to it.
+
+        A replay carries the capture's model layer for the same reason it carries
+        the capture's rows: it owns neither, and re-asking would make a re-stream
+        of a recorded run say something the recording does not.
+        """
+        comparison = match(self.rows_for(run_id))
+        meta = self.load_meta(run_id)
+        source = meta.source_run_id if meta and meta.source_run_id else run_id
+        comparison.llm_groups, comparison.llm = self._read_llm(source)
+        return comparison
 
     def list_runs(self, limit: int = 25, owner_hash: str | None = None) -> list[RunMeta]:
         """One visitor's runs, newest first.
