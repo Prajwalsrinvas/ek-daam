@@ -1,0 +1,227 @@
+[
+  {
+    "product_name": "Amul Unsalted Cooking Butter",
+    "brand": "Amul",
+    "package_size": "1 pack (100 g)",
+    "product_id": "v-fixture-001",
+    "mrp": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 22,
+    "is_sponsored": false,
+    "rating": 4.7,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-001.jpeg",
+    "serp_screenshot": null,
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Amul Salted Butter",
+    "brand": "Amul",
+    "package_size": "1 pack (500 g)",
+    "product_id": "v-fixture-002",
+    "mrp": {
+      "value": 310.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 309.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 309.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 2,
+    "is_sponsored": false,
+    "rating": 4.6,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-002.jpeg",
+    "serp_screenshot": null,
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Milky Mist Butter Chiplet",
+    "brand": "Milky Mist",
+    "package_size": "1 pack (10 x 10 g)",
+    "product_id": "v-fixture-003",
+    "mrp": {
+      "value": 90.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 88.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 88.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 28,
+    "is_sponsored": false,
+    "rating": 4.4,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-003.jpeg",
+    "serp_screenshot": {
+      "name": "serp-560001-amul-butter.png",
+      "url": "https://example.invalid/scrapeverse/serp-zepto.png",
+      "size": 184320,
+      "type": "image/png"
+    },
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Amul Butter Chiplet",
+    "brand": "Amul",
+    "package_size": "1 pack (50 x 20 g)",
+    "product_id": "v-fixture-004",
+    "mrp": {
+      "value": 635.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 635.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 635.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 2,
+    "is_sponsored": false,
+    "rating": 4.5,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-004.jpeg",
+    "serp_screenshot": null,
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Nandini Salted Butter",
+    "brand": "Nandini",
+    "package_size": "100 g",
+    "product_id": "v-fixture-005",
+    "mrp": {
+      "value": 70.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 70.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 70.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": true,
+    "available_quantity": 0,
+    "is_sponsored": false,
+    "rating": 4.3,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-005.jpeg",
+    "serp_screenshot": null,
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Nutralite Doodhshakti Probiotic Butter",
+    "brand": "Nutralite",
+    "package_size": "1 pack (500 g)",
+    "product_id": "v-fixture-006",
+    "mrp": {
+      "value": 305.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 279.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 279.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 2,
+    "is_sponsored": true,
+    "rating": 4.2,
+    "image_url": "https://cdn.example.invalid/product_variant/fixture-006.jpeg",
+    "serp_screenshot": null,
+    "store_id": "store-fixture-560001",
+    "requested_pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Heritage Table Butter",
+    "brand": "Heritage",
+    "package_size": "1 pack (100 g)",
+    "product_id": "v-fixture-007",
+    "mrp": {
+      "value": 62.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 60.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": null,
+    "out_of_stock": false,
+    "available_quantity": null,
+    "is_sponsored": false,
+    "rating": null,
+    "image_url": null,
+    "serp_screenshot": null,
+    "store_id": null,
+    "requested_pincode": "560001",
+    "resolved_area": null,
+    "eta_minutes": null,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  }
+]

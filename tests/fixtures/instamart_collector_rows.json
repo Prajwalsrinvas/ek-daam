@@ -1,0 +1,2192 @@
+[
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00001",
+  "mrp": {
+   "value": 252,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 252,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 252,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/001.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00002",
+  "mrp": {
+   "value": 189,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 189,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 189,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/002.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00003",
+  "mrp": {
+   "value": 63,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 63,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 63,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/003.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "200 g x 5",
+  "product_id": "IMFIX00004",
+  "mrp": {
+   "value": 650,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 650,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 650,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/004.png",
+  "serp_screenshot": {
+   "__type__": "file",
+   "id": "file-fixture-0001",
+   "filename": "fixture.serp_screenshot.png",
+   "page_id": "page-fixture-0001",
+   "content_type": "image/png",
+   "__filetype__": "image",
+   "__downloaded__": true,
+   "type": "screenshot",
+   "key": "serp_screenshot",
+   "url": "https://www.instamart.invalid/instamart/search?custom_back=true&query=amul%20butter",
+   "metadata": {
+    "extension": "png",
+    "content_type": "image/png"
+   }
+  },
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "200 g x 3",
+  "product_id": "IMFIX00005",
+  "mrp": {
+   "value": 390,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 390,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 390,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/005.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "200 g",
+  "product_id": "IMFIX00006",
+  "mrp": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/006.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "500 g",
+  "product_id": "IMFIX00007",
+  "mrp": {
+   "value": 310,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 310,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 310,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/007.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Butter Chiplets",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00008",
+  "mrp": {
+   "value": 80,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 80,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 80,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/008.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter",
+  "brand": "Amul",
+  "package_size": "50 g",
+  "product_id": "IMFIX00009",
+  "mrp": {
+   "value": 35,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 35,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 35,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/009.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Unsalted Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00010",
+  "mrp": {
+   "value": 260,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 260,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 260,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/010.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Unsalted Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00011",
+  "mrp": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/011.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Unsalted Butter",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00012",
+  "mrp": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/012.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Butter Unsalted Box",
+  "brand": "Amul",
+  "package_size": "500 g x 2",
+  "product_id": "IMFIX00013",
+  "mrp": {
+   "value": 640,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 640,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 640,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/013.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Butter Unsalted Box",
+  "brand": "Amul",
+  "package_size": "500 g",
+  "product_id": "IMFIX00014",
+  "mrp": {
+   "value": 320,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 320,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 320,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/014.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Delicious Margarine",
+  "brand": "Amul",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00015",
+  "mrp": {
+   "value": 50,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 50,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 50,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/015.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Delicious Margarine",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00016",
+  "mrp": {
+   "value": 25,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 25,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 25,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/016.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Delicious Margarine",
+  "brand": "Amul",
+  "package_size": "100 g x 5",
+  "product_id": "IMFIX00017",
+  "mrp": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/017.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Garlic & Herbs Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00018",
+  "mrp": {
+   "value": 300,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 300,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 300,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/018.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Garlic & Herbs Butter",
+  "brand": "Amul",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00019",
+  "mrp": {
+   "value": 225,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 225,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 225,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/019.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Garlic & Herbs Butter",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00020",
+  "mrp": {
+   "value": 75,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 75,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 75,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/020.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter+ English Oven Sandwich Bread",
+  "brand": "Amul",
+  "package_size": "1 Combo",
+  "product_id": "IMFIX00021",
+  "mrp": {
+   "value": 190,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 190,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 190,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.3,
+  "image_url": "https://images.instamart.invalid/fixture/021.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Processed Cheese Slices",
+  "brand": "Amul",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00022",
+  "mrp": {
+   "value": 246,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 246,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 246,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/022.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Processed Cheese Slices",
+  "brand": "Amul",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00023",
+  "mrp": {
+   "value": 164,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 164,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 164,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/023.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Processed Cheese Slices",
+  "brand": "Amul",
+  "package_size": "100 g",
+  "product_id": "IMFIX00024",
+  "mrp": {
+   "value": 82,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 82,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 82,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/024.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Modern Whole Wheat Bread (No trans fat)",
+  "brand": "Modern",
+  "package_size": "400 g",
+  "product_id": "IMFIX00025",
+  "mrp": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 65,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/025.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nandini Pasteurised Unsalted Butter",
+  "brand": "Nandini",
+  "package_size": "500 g",
+  "product_id": "IMFIX00026",
+  "mrp": {
+   "value": 330,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 330,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 330,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/026.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Cheese Cubes",
+  "brand": "Amul",
+  "package_size": "200 g x 2",
+  "product_id": "IMFIX00027",
+  "mrp": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/027.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Cheese Cubes",
+  "brand": "Amul",
+  "package_size": "200 g",
+  "product_id": "IMFIX00028",
+  "mrp": {
+   "value": 135,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 135,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 135,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/028.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Heritage Pasturised Table Butter",
+  "brand": "Heritage",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00029",
+  "mrp": {
+   "value": 124,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 120,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 120,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/029.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Heritage Pasturised Table Butter",
+  "brand": "Heritage",
+  "package_size": "100 g",
+  "product_id": "IMFIX00030",
+  "mrp": {
+   "value": 62,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 60,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 60,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/030.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Heritage Pasturised Table Butter",
+  "brand": "Heritage",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00031",
+  "mrp": {
+   "value": 248,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 240,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 240,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/031.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Heritage Pasturised Table Butter",
+  "brand": "Heritage",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00032",
+  "mrp": {
+   "value": 186,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/032.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Fresh Paneer",
+  "brand": "Amul",
+  "package_size": "200 g x 2",
+  "product_id": "IMFIX00033",
+  "mrp": {
+   "value": 210,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 210,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 210,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/033.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Fresh Paneer",
+  "brand": "Amul",
+  "package_size": "200 g",
+  "product_id": "IMFIX00034",
+  "mrp": {
+   "value": 105,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 105,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 105,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/034.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "NOICE Fresh Malai Paneer (Handmade Daily)",
+  "brand": "NOICE",
+  "package_size": "200 g",
+  "product_id": "IMFIX00035",
+  "mrp": {
+   "value": 130,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 99,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 99,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/035.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Table Salted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 5",
+  "product_id": "IMFIX00036",
+  "mrp": {
+   "value": 425,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 415,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 415,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/036.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Table Salted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00037",
+  "mrp": {
+   "value": 340,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 332,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 332,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/037.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Table Salted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00038",
+  "mrp": {
+   "value": 255,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 249,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 249,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/038.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Table Salted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00039",
+  "mrp": {
+   "value": 170,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 166,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 166,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/039.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Table Salted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g",
+  "product_id": "IMFIX00040",
+  "mrp": {
+   "value": 85,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 83,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 83,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/040.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Pasteurised Butter + The Health Factory Zero Maida Milk Bread",
+  "brand": "Amul",
+  "package_size": "1 Combo",
+  "product_id": "IMFIX00041",
+  "mrp": {
+   "value": 128,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 121,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 121,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/041.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Diced Cheese Blend Mozzeralla Cheddar",
+  "brand": "Amul",
+  "package_size": "200 g x 2",
+  "product_id": "IMFIX00042",
+  "mrp": {
+   "value": 250,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 250,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 250,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/042.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Diced Cheese Blend Mozzeralla Cheddar",
+  "brand": "Amul",
+  "package_size": "200 g",
+  "product_id": "IMFIX00043",
+  "mrp": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 125,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/043.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Cooking Unsalted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00044",
+  "mrp": {
+   "value": 255,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 249,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 249,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/044.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Cooking Unsalted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00045",
+  "mrp": {
+   "value": 170,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 166,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 166,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/045.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Cooking Unsalted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g",
+  "product_id": "IMFIX00046",
+  "mrp": {
+   "value": 85,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 83,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 83,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/046.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Cooking Unsalted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 5",
+  "product_id": "IMFIX00047",
+  "mrp": {
+   "value": 425,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 415,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 415,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/047.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Cooking Unsalted Butter",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00048",
+  "mrp": {
+   "value": 340,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 332,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 332,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/048.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Sid's Farm Buffalo Butter salted",
+  "brand": "Sid's Farm",
+  "package_size": "100 g",
+  "product_id": "IMFIX00049",
+  "mrp": {
+   "value": 90,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 90,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 90,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/049.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Sid's Farm Buffalo Butter salted",
+  "brand": "Sid's Farm",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00050",
+  "mrp": {
+   "value": 360,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 360,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 360,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/050.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Sid's Farm Buffalo Butter salted",
+  "brand": "Sid's Farm",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00051",
+  "mrp": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/051.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Sid's Farm Buffalo Butter salted",
+  "brand": "Sid's Farm",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00052",
+  "mrp": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/052.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "President Butter Salted",
+  "brand": "President",
+  "package_size": "500 g",
+  "product_id": "IMFIX00053",
+  "mrp": {
+   "value": 365,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 321,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 321,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/053.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nutralite Doodhshakti Probiotic Butter Spread",
+  "brand": "Nutralite",
+  "package_size": "500 g",
+  "product_id": "IMFIX00054",
+  "mrp": {
+   "value": 290,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 261,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 261,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/054.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nutralite Doodhshakti Probiotic Butter Spread",
+  "brand": "Nutralite",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00055",
+  "mrp": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 171,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 171,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/055.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nutralite Doodhshakti Probiotic Butter Spread",
+  "brand": "Nutralite",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00056",
+  "mrp": {
+   "value": 120,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 114,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 114,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/056.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nutralite Doodhshakti Probiotic Butter Spread",
+  "brand": "Nutralite",
+  "package_size": "100 g",
+  "product_id": "IMFIX00057",
+  "mrp": {
+   "value": 60,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 57,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 57,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/057.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Nutralite Doodhshakti Probiotic Butter Spread",
+  "brand": "Nutralite",
+  "package_size": "100 g x 5",
+  "product_id": "IMFIX00058",
+  "mrp": {
+   "value": 300,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 285,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 285,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/058.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Butter Chiplet Pack",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 5",
+  "product_id": "IMFIX00059",
+  "mrp": {
+   "value": 450,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 430,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 430,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/059.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Butter Chiplet Pack",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00060",
+  "mrp": {
+   "value": 360,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 344,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 344,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/060.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Unsalted Butter & Maggi 2-Minute Instant Noodles",
+  "brand": "Amul",
+  "package_size": "1 Combo",
+  "product_id": "IMFIX00061",
+  "mrp": {
+   "value": 155,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 149,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 149,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/061.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Butter Chiplet Pack",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 2",
+  "product_id": "IMFIX00062",
+  "mrp": {
+   "value": 180,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 172,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 172,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/062.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Butter Chiplet Pack",
+  "brand": "Milky Mist",
+  "package_size": "100 g",
+  "product_id": "IMFIX00063",
+  "mrp": {
+   "value": 90,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 86,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 86,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/063.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Akshayakalpa Organic Table Butter Salted",
+  "brand": "Akshayakalpa",
+  "package_size": "200 g x 2",
+  "product_id": "IMFIX00064",
+  "mrp": {
+   "value": 454,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 426,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 426,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/064.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Akshayakalpa Organic Table Butter Salted",
+  "brand": "Akshayakalpa",
+  "package_size": "200 g",
+  "product_id": "IMFIX00065",
+  "mrp": {
+   "value": 227,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 213,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 213,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.7,
+  "image_url": "https://images.instamart.invalid/fixture/065.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Masti Dahi",
+  "brand": "Amul",
+  "package_size": "450 g",
+  "product_id": "IMFIX00066",
+  "mrp": {
+   "value": 36,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 36,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 36,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/066.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "The Baker's Dozen Zero Maida Bread (Sourdough) +Amul Pasteurised Butter",
+  "brand": "The Baker's Dozen",
+  "package_size": "1 Combo",
+  "product_id": "IMFIX00067",
+  "mrp": {
+   "value": 133,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 129,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 129,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.4,
+  "image_url": "https://images.instamart.invalid/fixture/067.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "The Health Factory Zero Maida - Simply Whole Wheat & Amul Butter Combo",
+  "brand": "The Health Factory",
+  "package_size": "1 Combo",
+  "product_id": "IMFIX00068",
+  "mrp": {
+   "value": 128,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 128,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 128,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.3,
+  "image_url": "https://images.instamart.invalid/fixture/068.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Safed Makkhan Unsalted",
+  "brand": "Amul",
+  "package_size": "500 g",
+  "product_id": "IMFIX00069",
+  "mrp": {
+   "value": 290,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 290,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 290,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/069.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Lite Milk Fat Bread Spread",
+  "brand": "Amul",
+  "package_size": "200 g x 5",
+  "product_id": "IMFIX00070",
+  "mrp": {
+   "value": 470,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 470,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 470,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/070.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Lite Milk Fat Bread Spread",
+  "brand": "Amul",
+  "package_size": "200 g x 3",
+  "product_id": "IMFIX00071",
+  "mrp": {
+   "value": 282,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 282,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 282,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/071.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Lite Milk Fat Bread Spread",
+  "brand": "Amul",
+  "package_size": "200 g x 2",
+  "product_id": "IMFIX00072",
+  "mrp": {
+   "value": 188,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 188,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 188,
+   "currency": "INR"
+  },
+  "out_of_stock": true,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/072.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Processed Cheese Slices",
+  "brand": "Amul",
+  "package_size": "100 g x 4",
+  "product_id": "IMFIX00073",
+  "mrp": {
+   "value": 328,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 328,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 328,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/073.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Amul Diced Cheese Blend Mozzeralla Cheddar",
+  "brand": "Amul",
+  "package_size": "200 g x 3",
+  "product_id": "IMFIX00074",
+  "mrp": {
+   "value": 375,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 375,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 375,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.5,
+  "image_url": "https://images.instamart.invalid/fixture/074.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": 13,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ },
+ {
+  "product_name": "Milky Mist Butter Chiplet Pack",
+  "brand": "Milky Mist",
+  "package_size": "100 g x 3",
+  "product_id": "IMFIX00075",
+  "mrp": {
+   "value": 270,
+   "currency": "INR"
+  },
+  "selling_price": {
+   "value": 258,
+   "currency": "INR"
+  },
+  "discounted_selling_price": {
+   "value": 258,
+   "currency": "INR"
+  },
+  "out_of_stock": false,
+  "available_quantity": null,
+  "is_sponsored": false,
+  "rating": 4.6,
+  "image_url": "https://images.instamart.invalid/fixture/075.png",
+  "serp_screenshot": null,
+  "store_id": "930001",
+  "requested_pincode": "560001",
+  "resolved_area": "Delivery to 560001, Bengaluru, Karnataka",
+  "eta_minutes": null,
+  "captured_at": "2026-08-22T18:00:31.026Z"
+ }
+]

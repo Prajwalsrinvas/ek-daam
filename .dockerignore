@@ -1,0 +1,14 @@
+.git
+.venv
+runs
+DESIGN.md
+web/node_modules
+web/dist
+**/__pycache__
+.pytest_cache
+*.egg-info
+*.tsbuildinfo
+# Real secrets, in every spelling. `.env` alone left `.env.bak`, `.env.local`
+# and `web/.env` free to travel into an image.
+.env*
+web/.env*

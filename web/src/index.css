@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Deliberately plain. A real design pass comes later; this only has to be
+   clean and readable. */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}

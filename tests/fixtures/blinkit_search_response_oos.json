@@ -1,0 +1,504 @@
+[
+  {
+    "universe": "blinkit",
+    "query": "amul butter",
+    "pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "screenshot_url": "https://example.invalid/scrapeverse/mock-blinkit.png",
+    "captured_at": "2026-08-22T09:12:33.412Z",
+    "search_response": {
+      "is_success": true,
+      "response": {
+        "snippets": [
+          {
+            "data": {
+              "identity": {
+                "id": "910013"
+              },
+              "product_id": 910013,
+              "name": {
+                "text": "Nandini Pasteurised Salted Butter"
+              },
+              "brand_name": {
+                "text": "Nandini"
+              },
+              "variant": {
+                "text": "500 g"
+              },
+              "normal_price": {
+                "text": "₹310"
+              },
+              "inventory": 2,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910013"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-001.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.56
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910013,
+                    "merchant_id": 900001,
+                    "product_name": "Nandini Pasteurised Salted Butter",
+                    "price": 310,
+                    "mrp": 310,
+                    "unit": "500 g",
+                    "inventory": 2,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-001.png",
+                    "brand": "Nandini",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910014"
+              },
+              "product_id": 910014,
+              "name": {
+                "text": "Milky Mist Salted Salted Butter"
+              },
+              "brand_name": {
+                "text": "Milky Mist"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹83"
+              },
+              "inventory": 1,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910014"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-002.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹85"
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910014,
+                    "merchant_id": 900001,
+                    "product_name": "Milky Mist Salted Salted Butter",
+                    "price": 83,
+                    "mrp": 85,
+                    "unit": "100 g",
+                    "inventory": 1,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-002.png",
+                    "brand": "Milky Mist",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910015"
+              },
+              "product_id": 910015,
+              "name": {
+                "text": "Jus'Amazin Creamy Unsweetened Almond Butter"
+              },
+              "brand_name": {
+                "text": "Jus'Amazin"
+              },
+              "variant": {
+                "text": "200 g"
+              },
+              "normal_price": {
+                "text": "₹399"
+              },
+              "inventory": 2,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900002",
+              "merchant_type": "longtail",
+              "meta": {
+                "merchant_id": "900002",
+                "product_id": "910015"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-003.png"
+              },
+              "eta_identifier": "longtail",
+              "mrp": {
+                "text": "₹420"
+              },
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.51
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/30-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "30 mins"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/30-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910015,
+                    "merchant_id": 900002,
+                    "product_name": "Jus'Amazin Creamy Unsweetened Almond Butter",
+                    "price": 399,
+                    "mrp": 420,
+                    "unit": "200 g",
+                    "inventory": 2,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-003.png",
+                    "brand": "Jus'Amazin",
+                    "merchant_type": "longtail"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910016"
+              },
+              "product_id": 910016,
+              "name": {
+                "text": "Jus'Amazin Crunchy Unsweetened Almond Butter"
+              },
+              "brand_name": {
+                "text": "Jus'Amazin"
+              },
+              "variant": {
+                "text": "200 g"
+              },
+              "normal_price": {
+                "text": "₹399"
+              },
+              "inventory": 2,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900002",
+              "merchant_type": "longtail",
+              "meta": {
+                "merchant_id": "900002",
+                "product_id": "910016"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-004.png"
+              },
+              "eta_identifier": "longtail",
+              "mrp": {
+                "text": "₹420"
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/30-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "30 mins"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/30-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910016,
+                    "merchant_id": 900002,
+                    "product_name": "Jus'Amazin Crunchy Unsweetened Almond Butter",
+                    "price": 399,
+                    "mrp": 420,
+                    "unit": "200 g",
+                    "inventory": 2,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-004.png",
+                    "brand": "Jus'Amazin",
+                    "merchant_type": "longtail"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910017"
+              },
+              "product_id": 910017,
+              "name": {
+                "text": "Amul Garlic & Herbs Butter"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹75"
+              },
+              "inventory": 0,
+              "is_sold_out": false,
+              "product_state": "out_of_stock",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910017"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-005.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.69
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910017,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Garlic & Herbs Butter",
+                    "price": 75,
+                    "mrp": 75,
+                    "unit": "100 g",
+                    "inventory": 0,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-005.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910018"
+              },
+              "product_id": 910018,
+              "name": {
+                "text": "Amul Lite Milk Fat Spread"
+              },
+              "brand_name": {
+                "text": "Amul Lite"
+              },
+              "variant": {
+                "text": "500 g"
+              },
+              "normal_price": {
+                "text": "₹240"
+              },
+              "inventory": 0,
+              "is_sold_out": false,
+              "product_state": "out_of_stock",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910018"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-006.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.55
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910018,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Lite Milk Fat Spread",
+                    "price": 240,
+                    "mrp": 240,
+                    "unit": "500 g",
+                    "inventory": 0,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-006.png",
+                    "brand": "Amul Lite",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910019"
+              },
+              "product_id": 910019,
+              "name": {
+                "text": "Amul Masti Spiced Salted Buttermilk"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "200 ml"
+              },
+              "normal_price": {
+                "text": "₹15"
+              },
+              "inventory": 0,
+              "is_sold_out": false,
+              "product_state": "out_of_stock",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910019"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-007.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.56
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910019,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Masti Spiced Salted Buttermilk",
+                    "price": 15,
+                    "mrp": 15,
+                    "unit": "200 ml",
+                    "inventory": 0,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-007.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          }
+        ]
+      }
+    }
+  }
+]

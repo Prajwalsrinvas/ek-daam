@@ -1,0 +1,321 @@
+[
+  {
+    "universe": "zepto",
+    "query": "amul butter",
+    "pincode": "560001",
+    "resolved_area": "Bengaluru - 560001, Karnataka",
+    "eta_minutes": 12,
+    "screenshot_url": "https://example.invalid/scrapeverse/mock-zepto.png",
+    "captured_at": "2026-08-22T09:12:33.412Z",
+    "search_response": {
+      "pageProductCount": 7,
+      "totalProductCount": 7,
+      "currentPage": 0,
+      "hasReachedEnd": true,
+      "layout": [
+        {
+          "widgetId": "TITLE_WIDGET",
+          "widgetName": "SEARCH_TITLE_WIDGET",
+          "data": {
+            "resolver": {
+              "type": "title",
+              "data": {
+                "items": [],
+                "title": "Showing results for \"amul butter\"",
+                "searchQuery": "amul butter"
+              }
+            },
+            "endOfList": false
+          }
+        },
+        {
+          "widgetId": "PREMIUM_CONTEXTUAL_ADS_V2",
+          "widgetName": "PCA_SPONSORED_BRANDS",
+          "data": {
+            "resolver": {
+              "type": "products",
+              "data": {
+                "items": [
+                  {
+                    "title": [{ "text": "Sponsored", "variant": "heading3" }],
+                    "variantType": "SINGLE_PRODUCT_VARIANT",
+                    "items": [
+                      {
+                        "type": "MEDIA_ITEM",
+                        "data": {
+                          "name": "banner.png",
+                          "path": "cms/ads/banner.png",
+                          "mediaType": "IMAGE",
+                          "width": 1200,
+                          "height": 400
+                        }
+                      },
+                      {
+                        "type": "PRODUCT_ITEM",
+                        "data": {
+                          "id": "sp-fixture-006",
+                          "product": {
+                            "id": "p-fixture-006",
+                            "name": "Nutralite Doodhshakti Probiotic Butter",
+                            "brand": "Nutralite",
+                            "countryOfOrigin": "India"
+                          },
+                          "productVariant": {
+                            "id": "v-fixture-006",
+                            "formattedPacksize": "1 pack (500 g)",
+                            "packsize": 500,
+                            "unitOfMeasure": "GRAM",
+                            "weightInGms": 500,
+                            "images": [
+                              { "path": "cms/product_variant/fixture-006.jpeg", "mediaType": "IMAGE" }
+                            ]
+                          },
+                          "mrp": 30500,
+                          "sellingPrice": 27900,
+                          "discountedSellingPrice": 27900,
+                          "discountPercent": 9,
+                          "outOfStock": false,
+                          "availableQuantity": 2,
+                          "zeptoPassPrice": 26400,
+                          "superSaverSellingPrice": 27100,
+                          "productType": "SELLABLESKU"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "endOfList": false
+          }
+        },
+        {
+          "widgetId": "PRODUCT_GRID",
+          "widgetName": "SEARCHED_PRODUCTS_0",
+          "data": {
+            "resolver": {
+              "type": "products",
+              "data": {
+                "items": [
+                  {
+                    "position": 0,
+                    "index": 1,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-001",
+                      "product": {
+                        "id": "p-fixture-001",
+                        "name": "Amul Unsalted Cooking Butter",
+                        "brand": "Amul",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-001",
+                        "formattedPacksize": "1 pack (100 g)",
+                        "packsize": 100,
+                        "unitOfMeasure": "GRAM",
+                        "weightInGms": 100,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-001.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 6500,
+                      "sellingPrice": 6500,
+                      "discountedSellingPrice": 6500,
+                      "discountPercent": 0,
+                      "outOfStock": false,
+                      "availableQuantity": 22,
+                      "zeptoPassPrice": 6200,
+                      "superSaverSellingPrice": 6300,
+                      "productType": "SELLABLESKU"
+                    }
+                  },
+                  {
+                    "position": 1,
+                    "index": 2,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-002",
+                      "product": {
+                        "id": "p-fixture-002",
+                        "name": "Amul Salted Butter",
+                        "brand": "Amul",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-002",
+                        "formattedPacksize": "1 pack (500 g)",
+                        "packsize": 500,
+                        "unitOfMeasure": "GRAM",
+                        "weightInGms": 500,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-002.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 31000,
+                      "sellingPrice": 30900,
+                      "discountedSellingPrice": 30900,
+                      "discountPercent": 0,
+                      "outOfStock": false,
+                      "availableQuantity": 2,
+                      "zeptoPassPrice": 29900,
+                      "superSaverSellingPrice": 30200,
+                      "productType": "SELLABLESKU"
+                    }
+                  },
+                  {
+                    "position": 2,
+                    "index": 3,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-003",
+                      "product": {
+                        "id": "p-fixture-003",
+                        "name": "Milky Mist Butter Chiplet",
+                        "brand": "Milky Mist",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-003",
+                        "formattedPacksize": "1 pack (10 x 10 g)",
+                        "packsize": 100,
+                        "unitOfMeasure": "GRAM",
+                        "weightInGms": 100,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-003.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 9000,
+                      "sellingPrice": 8800,
+                      "discountedSellingPrice": 8800,
+                      "discountPercent": 2,
+                      "outOfStock": false,
+                      "availableQuantity": 28,
+                      "zeptoPassPrice": 8400,
+                      "superSaverSellingPrice": 8600,
+                      "productType": "SELLABLESKU"
+                    }
+                  }
+                ]
+              }
+            },
+            "endOfList": false
+          }
+        },
+        {
+          "widgetId": "PRODUCT_GRID",
+          "widgetName": "SEARCHED_PRODUCTS_3",
+          "data": {
+            "resolver": {
+              "type": "products",
+              "data": {
+                "items": [
+                  {
+                    "position": 0,
+                    "index": 4,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-004",
+                      "product": {
+                        "id": "p-fixture-004",
+                        "name": "Amul Butter Chiplet",
+                        "brand": "Amul",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-004",
+                        "formattedPacksize": "1 pack (50 x 20 g)",
+                        "packsize": 1,
+                        "unitOfMeasure": "KILO",
+                        "weightInGms": 1000,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-004.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 63500,
+                      "sellingPrice": 63500,
+                      "discountedSellingPrice": 63500,
+                      "discountPercent": 0,
+                      "outOfStock": false,
+                      "availableQuantity": 2,
+                      "zeptoPassPrice": 61000,
+                      "superSaverSellingPrice": 62000,
+                      "productType": "SELLABLESKU"
+                    }
+                  },
+                  {
+                    "position": 1,
+                    "index": 5,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-005",
+                      "product": {
+                        "id": "p-fixture-005",
+                        "name": "Nandini Salted Butter",
+                        "brand": "Nandini",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-005",
+                        "formattedPacksize": "100 g",
+                        "packsize": 100,
+                        "unitOfMeasure": "GRAM",
+                        "weightInGms": 100,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-005.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 7000,
+                      "sellingPrice": 7000,
+                      "discountedSellingPrice": 7000,
+                      "discountPercent": 0,
+                      "outOfStock": true,
+                      "availableQuantity": 0,
+                      "zeptoPassPrice": 6700,
+                      "superSaverSellingPrice": 6800,
+                      "productType": "SELLABLESKU"
+                    }
+                  },
+                  {
+                    "position": 2,
+                    "index": 6,
+                    "info": null,
+                    "productResponse": {
+                      "id": "sp-fixture-007",
+                      "product": {
+                        "id": "p-fixture-007",
+                        "name": "Heritage Table Butter",
+                        "brand": "Heritage",
+                        "countryOfOrigin": "India"
+                      },
+                      "productVariant": {
+                        "id": "v-fixture-007",
+                        "formattedPacksize": "1 pack (100 g)",
+                        "packsize": 100,
+                        "unitOfMeasure": "GRAM",
+                        "weightInGms": 100,
+                        "images": [
+                          { "path": "cms/product_variant/fixture-007.jpeg", "mediaType": "IMAGE" }
+                        ]
+                      },
+                      "mrp": 6200,
+                      "sellingPrice": 0,
+                      "discountedSellingPrice": 0,
+                      "discountPercent": 0,
+                      "outOfStock": false,
+                      "availableQuantity": 9,
+                      "zeptoPassPrice": 5500,
+                      "superSaverSellingPrice": 0,
+                      "productType": "SELLABLESKU"
+                    }
+                  }
+                ]
+              }
+            },
+            "endOfList": true
+          }
+        }
+      ]
+    }
+  }
+]

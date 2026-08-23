@@ -1,0 +1,190 @@
+[
+  {
+    "product_name": "Nutralite DoodhShakti Probiotic Salted Butter",
+    "brand": "Nutralite",
+    "package_size": "100 g",
+    "product_id": "910001",
+    "mrp": {
+      "value": 63.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 60.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 60.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 6,
+    "is_sponsored": true,
+    "rating": 4.31,
+    "image_url": "https://cdn.example.invalid/blinkit/910001.png",
+    "serp_screenshot": null,
+    "store_id": "900001",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Amul Salted Butter",
+    "brand": "Amul",
+    "package_size": "100 g",
+    "product_id": "910002",
+    "mrp": {
+      "value": 63.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 63.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 63.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 4,
+    "is_sponsored": false,
+    "rating": 4.68,
+    "image_url": "https://cdn.example.invalid/blinkit/910002.png",
+    "serp_screenshot": null,
+    "store_id": "900001",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Amul Unsalted Butter",
+    "brand": "Amul",
+    "package_size": "100 g",
+    "product_id": "910004",
+    "mrp": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 65.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 25,
+    "is_sponsored": false,
+    "rating": 4.55,
+    "image_url": "https://cdn.example.invalid/blinkit/910004.png",
+    "serp_screenshot": "j_fixture.9f3ab.file_1.serp_screenshot.png",
+    "store_id": "900001",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Milky Mist Chiplet Salted Butter",
+    "brand": "Milky Mist",
+    "package_size": "100 g",
+    "product_id": "910011",
+    "mrp": {
+      "value": 90.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 88.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": null,
+    "out_of_stock": false,
+    "available_quantity": 2,
+    "is_sponsored": false,
+    "rating": null,
+    "image_url": "https://cdn.example.invalid/blinkit/910011.png",
+    "serp_screenshot": null,
+    "store_id": "900001",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Jus'Amazin Creamy Unsweetened Almond Butter",
+    "brand": "Jus'Amazin",
+    "package_size": "200 g",
+    "product_id": "910015",
+    "mrp": {
+      "value": 420.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 399.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 399.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": false,
+    "available_quantity": 2,
+    "is_sponsored": false,
+    "rating": 4.2,
+    "image_url": "https://cdn.example.invalid/blinkit/910015.png",
+    "serp_screenshot": null,
+    "store_id": "900002",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 30,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  },
+  {
+    "product_name": "Amul Garlic & Herbs Butter",
+    "brand": "Amul",
+    "package_size": "100 g",
+    "product_id": "910017",
+    "mrp": {
+      "value": 75.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "selling_price": {
+      "value": 75.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "discounted_selling_price": {
+      "value": 75.0,
+      "currency": "INR",
+      "symbol": "₹"
+    },
+    "out_of_stock": true,
+    "available_quantity": 0,
+    "is_sponsored": false,
+    "rating": null,
+    "image_url": null,
+    "serp_screenshot": null,
+    "store_id": "900001",
+    "requested_pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": null,
+    "captured_at": "2026-08-22T09:12:33.412Z"
+  }
+]

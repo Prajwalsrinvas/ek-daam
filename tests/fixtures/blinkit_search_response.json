@@ -1,0 +1,961 @@
+[
+  {
+    "universe": "blinkit",
+    "query": "amul butter",
+    "pincode": "560001",
+    "resolved_area": "560001, Bengaluru, Karnataka",
+    "eta_minutes": 8,
+    "screenshot_url": "https://example.invalid/scrapeverse/mock-blinkit.png",
+    "captured_at": "2026-08-22T09:12:33.412Z",
+    "search_response": {
+      "is_success": true,
+      "response": {
+        "snippets": [
+          {
+            "data": {
+              "title": {
+                "text": "Showing results for \"amul butter\""
+              }
+            },
+            "widget_type": "image_text_vr_type_header"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910001"
+              },
+              "product_id": 910001,
+              "name": {
+                "text": "Nutralite DoodhShakti Probiotic Salted Butter"
+              },
+              "brand_name": {
+                "text": "Nutralite"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹60"
+              },
+              "inventory": 6,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910001"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-001.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹63"
+              },
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.66
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "overlay_badges": [
+                {
+                  "image": {
+                    "url": "https://cdn.example.invalid/assets/ui/ad_without_bg.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910001,
+                    "merchant_id": 900001,
+                    "product_name": "Nutralite DoodhShakti Probiotic Salted Butter",
+                    "price": 60,
+                    "mrp": 63,
+                    "unit": "100 g",
+                    "inventory": 6,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-001.png",
+                    "brand": "Nutralite",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2",
+            "tracking": {
+              "common_attributes": {
+                "ads_campaign_id": "ads-fixture-001"
+              }
+            }
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910002"
+              },
+              "product_id": 910002,
+              "name": {
+                "text": "Amul Salted Butter"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹63"
+              },
+              "inventory": 4,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910002"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-002.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.68
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910002,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Salted Butter",
+                    "price": 63,
+                    "mrp": 63,
+                    "unit": "100 g",
+                    "inventory": 4,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-002.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910003"
+              },
+              "product_id": 910003,
+              "name": {
+                "text": "Amul Salted Butter (200 g)"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "200 g"
+              },
+              "normal_price": {
+                "text": "₹130"
+              },
+              "inventory": 7,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910003"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-003.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.78
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910003,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Salted Butter (200 g)",
+                    "price": 130,
+                    "mrp": 130,
+                    "unit": "200 g",
+                    "inventory": 7,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-003.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910004"
+              },
+              "product_id": 910004,
+              "name": {
+                "text": "Amul Unsalted Butter"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹65"
+              },
+              "inventory": 25,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910004"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-004.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.57
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910004,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Unsalted Butter",
+                    "price": 65,
+                    "mrp": 65,
+                    "unit": "100 g",
+                    "inventory": 25,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-004.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "items": [
+                {
+                  "data": {
+                    "title": {
+                      "text": "Similar brands"
+                    }
+                  },
+                  "widget_type": "image_text_vr_type_header"
+                },
+                {
+                  "data": {
+                    "horizontal_item_list": [
+                      {
+                        "data": {
+                          "title": {
+                            "text": "Amul"
+                          }
+                        },
+                        "widget_type": "v2_image_text_snippet_type_19"
+                      },
+                      {
+                        "data": {
+                          "title": {
+                            "text": "Milky Mist"
+                          }
+                        },
+                        "widget_type": "v2_image_text_snippet_type_19"
+                      }
+                    ]
+                  },
+                  "widget_type": "horizontal_list"
+                }
+              ]
+            },
+            "widget_type": "grid_container_vr"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910005"
+              },
+              "product_id": 910005,
+              "name": {
+                "text": "Nutralite DoodhShakti Probiotic Salted Butter (500 g)"
+              },
+              "brand_name": {
+                "text": "Nutralite"
+              },
+              "variant": {
+                "text": "500 g"
+              },
+              "normal_price": {
+                "text": "₹287"
+              },
+              "inventory": 2,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910005"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-005.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹305"
+              },
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.53
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "overlay_badges": [
+                {
+                  "image": {
+                    "url": "https://cdn.example.invalid/assets/ui/ad_without_bg.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910005,
+                    "merchant_id": 900001,
+                    "product_name": "Nutralite DoodhShakti Probiotic Salted Butter (500 g)",
+                    "price": 287,
+                    "mrp": 305,
+                    "unit": "500 g",
+                    "inventory": 2,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-005.png",
+                    "brand": "Nutralite",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2",
+            "tracking": {
+              "common_attributes": {
+                "ads_campaign_id": "ads-fixture-001"
+              }
+            }
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910006"
+              },
+              "product_id": 910006,
+              "name": {
+                "text": "Amul Salted Butter (Chiplets)"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹80"
+              },
+              "inventory": 5,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910006"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-006.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.76
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910006,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Salted Butter (Chiplets)",
+                    "price": 80,
+                    "mrp": 80,
+                    "unit": "100 g",
+                    "inventory": 5,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-006.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910007"
+              },
+              "product_id": 910007,
+              "name": {
+                "text": "Amul Fresh Butter Cookies"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "200 g"
+              },
+              "normal_price": {
+                "text": "₹85"
+              },
+              "inventory": 8,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910007"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-007.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.62
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910007,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Fresh Butter Cookies",
+                    "price": 85,
+                    "mrp": 85,
+                    "unit": "200 g",
+                    "inventory": 8,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-007.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910008"
+              },
+              "product_id": 910008,
+              "name": {
+                "text": "Milky Mist Unsalted Cooking Butter"
+              },
+              "brand_name": {
+                "text": "Milky Mist"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹83"
+              },
+              "inventory": 1,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910008"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-008.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹85"
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910008,
+                    "merchant_id": 900001,
+                    "product_name": "Milky Mist Unsalted Cooking Butter",
+                    "price": 83,
+                    "mrp": 85,
+                    "unit": "100 g",
+                    "inventory": 1,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-008.png",
+                    "brand": "Milky Mist",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910009"
+              },
+              "product_id": 910009,
+              "name": {
+                "text": "Mother Dairy Salted Butter"
+              },
+              "brand_name": {
+                "text": "Mother Dairy"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹63"
+              },
+              "inventory": 3,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910009"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-009.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.59
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910009,
+                    "merchant_id": 900001,
+                    "product_name": "Mother Dairy Salted Butter",
+                    "price": 63,
+                    "mrp": 63,
+                    "unit": "100 g",
+                    "inventory": 3,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-009.png",
+                    "brand": "Mother Dairy",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910010"
+              },
+              "product_id": 910010,
+              "name": {
+                "text": "Amul Masti Spiced Salted Buttermilk"
+              },
+              "brand_name": {
+                "text": "Amul"
+              },
+              "variant": {
+                "text": "1 ltr"
+              },
+              "normal_price": {
+                "text": "₹70"
+              },
+              "inventory": 11,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910010"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-010.png"
+              },
+              "eta_identifier": "express",
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.67
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910010,
+                    "merchant_id": 900001,
+                    "product_name": "Amul Masti Spiced Salted Buttermilk",
+                    "price": 70,
+                    "mrp": 70,
+                    "unit": "1 ltr",
+                    "inventory": 11,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-010.png",
+                    "brand": "Amul",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910011"
+              },
+              "product_id": 910011,
+              "name": {
+                "text": "Milky Mist Chiplet Salted Butter"
+              },
+              "brand_name": {
+                "text": "Milky Mist"
+              },
+              "variant": {
+                "text": "100 g"
+              },
+              "normal_price": {
+                "text": "₹88"
+              },
+              "inventory": 2,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910011"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-011.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹90"
+              },
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.71
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910011,
+                    "merchant_id": 900001,
+                    "product_name": "Milky Mist Chiplet Salted Butter",
+                    "price": 88,
+                    "mrp": 90,
+                    "unit": "100 g",
+                    "inventory": 2,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-011.png",
+                    "brand": "Milky Mist",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          },
+          {
+            "data": {
+              "identity": {
+                "id": "910012"
+              },
+              "product_id": 910012,
+              "name": {
+                "text": "Milky Mist Cooking Unsalted Butter"
+              },
+              "brand_name": {
+                "text": "Milky Mist"
+              },
+              "variant": {
+                "text": "200 g"
+              },
+              "normal_price": {
+                "text": "₹154"
+              },
+              "inventory": 4,
+              "is_sold_out": false,
+              "product_state": "available",
+              "merchant_id": "900001",
+              "merchant_type": "express",
+              "meta": {
+                "merchant_id": "900001",
+                "product_id": "910012"
+              },
+              "image": {
+                "url": "https://cdn.example.invalid/blinkit/fixture-012.png"
+              },
+              "eta_identifier": "express",
+              "mrp": {
+                "text": "₹160"
+              },
+              "rating": {
+                "type": "bar",
+                "bar": {
+                  "value": 4.72
+                }
+              },
+              "eta_tag": {
+                "image": {
+                  "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                }
+              },
+              "product_badges": [
+                {
+                  "type": "ETA",
+                  "text_data": {
+                    "text": "earliest"
+                  },
+                  "image_data": {
+                    "url": "https://cdn.example.invalid/assets/eta-icons/15-mins.png"
+                  }
+                }
+              ],
+              "atc_action": {
+                "add_to_cart": {
+                  "cart_item": {
+                    "product_id": 910012,
+                    "merchant_id": 900001,
+                    "product_name": "Milky Mist Cooking Unsalted Butter",
+                    "price": 154,
+                    "mrp": 160,
+                    "unit": "200 g",
+                    "inventory": 4,
+                    "image_url": "https://cdn.example.invalid/blinkit/fixture-012.png",
+                    "brand": "Milky Mist",
+                    "merchant_type": "express"
+                  }
+                }
+              }
+            },
+            "widget_type": "product_card_snippet_type_2"
+          }
+        ]
+      }
+    }
+  }
+]
