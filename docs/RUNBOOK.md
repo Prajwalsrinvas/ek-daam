@@ -4,8 +4,8 @@ Operational notes for going live and for the two things that are easy to get
 wrong when extending the app. No real ids or keys belong in this file — every
 value below is a placeholder.
 
-All three universes — Zepto, Blinkit and Instamart — are live against published
-collectors. The checklist below is written per universe: run it once for each,
+All four universes (Zepto, Blinkit, Instamart and the chaos demo store served by
+this app) are live against published collectors. The checklist below is written per universe: run it once for each,
 against a saved payload, before that universe joins a demo.
 
 ---
@@ -70,7 +70,7 @@ Zero rows means the shape does not match. Fix the mapper, not the collector.
 **4. Correct the fixture to match reality.** Update
 `tests/fixtures/<universe>_collector_rows.json` so it pins what the collector
 actually emits, and note what each row proves in `tests/fixtures/README.md`. All
-three universes have been through this against real datasets; anything still
+four universes have been through this against real datasets; anything still
 unconfirmed for a NEW universe should be marked so it stays greppable:
 
 ```bash
@@ -404,12 +404,12 @@ provenance, and any logged-out browser sees the same value.
 
 ### Replays and coordinates (resolved Sun 2026-08-23)
 
-The single curated replay `runs/replays/r_20260823_074638_a586` was captured after
-the app switched to the `{keyword, pincode}` trigger, so the input echo on its
-rows carries no coordinates. The three earlier replays (captured while the app
-still sent `lat`/`long`) were deleted rather than hand-edited — editing a capture
-would turn evidence into a fabrication. `test_no_coordinates_or_pincode_table_in_the_code_or_docs`
-now scans `runs/replays/` as well; untracked `runs/r_*` dirs are gitignored.
+No replay capture is tracked in the repository; `runs/` is gitignored. The public demo
+replay is a real run stored on the server and named by `SVERSE_DEMO_RUN_ID`, which is the
+only run readable and replayable without the owner cookie. Captures are never hand-edited:
+a capture that needs changing is recaptured. Every row's input echo carries only
+`{keyword, pincode}`, and `test_no_coordinates_or_pincode_table_in_the_code_or_docs` keeps
+coordinates out of the code and docs.
 
 ---
 
