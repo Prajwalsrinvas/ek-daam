@@ -16,6 +16,11 @@ Endpoint shapes below are taken from the Bright Data docs, not guessed:
        202 -> {"status":"building","message":"Dataset is not ready yet, ..."}
        200 -> JSON array of result records (our collector's output schema)
 
+  POST /dca/jobs/{job_id}/cancel
+       200 -> {"done":1}
+       Stops a job that is still queued or running. Confirmed against a live
+       job that had been running for 319s.
+
 `LiveClient` and `MockClient` implement the same three calls plus the screenshot
 fetch, so `runs.py` is byte-for-byte identical in both modes. Flipping BD_MODE
 requires zero code changes, which is the whole point of the seam.
@@ -61,6 +66,11 @@ class JobLog:
     lines: int | None = None
     fails: int | None = None
     success: int | None = None
+    # How many pages the worker has actually opened. A job that Bright Data has
+    # accepted and reports as running, but whose `navigations` never leaves 0,
+    # is one whose worker was never allocated: it will sit there until something
+    # cancels it. `runs.py` watches this. None means the field was absent.
+    navigations: int | None = None
     template: str | None = None
     raw: dict[str, Any] | None = None
 
@@ -86,6 +96,7 @@ class JobLog:
             lines=_int("lines"),
             fails=_int("fails"),
             success=_int("success"),
+            navigations=_int("navigations"),
             template=str(payload["template"]) if payload.get("template") else None,
             raw=payload,
         )
@@ -99,6 +110,8 @@ class BDClient(Protocol):
     async def job_log(self, job_id: str) -> JobLog: ...
 
     async def fetch_results(self, job_id: str) -> list[dict[str, Any]] | None: ...
+
+    async def cancel_job(self, job_id: str) -> bool: ...
 
     async def fetch_screenshot(self, record: dict[str, Any], universe_id: str) -> bytes | None: ...
 
@@ -185,6 +198,17 @@ class LiveClient:
         if isinstance(payload, list):
             return payload
         raise BDError("dataset fetch returned an unexpected body")
+
+    async def cancel_job(self, job_id: str) -> bool:
+        """Stop a job at Bright Data. True if it took, False if it did not.
+
+        Never raises on an HTTP answer, because every caller is already handling
+        something that went wrong and a cancel is the cleanup, not the outcome.
+        The job is lost to the run either way; the only thing left to save is the
+        collector time it would go on spending.
+        """
+        response = await self._client.post(f"/dca/jobs/{job_id}/cancel")
+        return 200 <= response.status_code < 300
 
     async def fetch_screenshot(self, record: dict[str, Any], universe_id: str) -> bytes | None:
         """Always None. Bright Data does not deliver collector media over the API.
@@ -311,6 +335,9 @@ class MockClient:
             lines=30 if done else None,
             fails=0,
             success=1 if done else 0,
+            # The mock driver's jobs always make progress, so they never look
+            # like the stalled-worker case `runs.py` watches for.
+            navigations=polls,
             template="t_mock.1",
             raw={"mock": True},
         )
@@ -324,6 +351,10 @@ class MockClient:
             raise BDError(f"no mock fixture for universe {universe_id!r} at {path.name}")
         payload = json.loads(path.read_text(encoding="utf-8"))
         return payload if isinstance(payload, list) else [payload]
+
+    async def cancel_job(self, job_id: str) -> bool:
+        self._polls.pop(job_id, None)
+        return True
 
     async def fetch_screenshot(self, record: dict[str, Any], universe_id: str) -> bytes | None:
         await self._tick()

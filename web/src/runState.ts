@@ -24,6 +24,7 @@ export const IMPLEMENTED_EVENT_TYPES = [
   "artifact_failed",
   "validated",
   "zero_rows",
+  "retriggered",
   "failed",
   "timed_out",
   "done",
@@ -221,6 +222,12 @@ export function foldEvent(state: RunState, event: RunEvent): RunState {
         u.zeroReason = str(d.reason);
       }
       break;
+    case "retriggered":
+      // Non-terminal and deliberately status-preserving: the job that never
+      // started is gone and a replacement is already in flight, so the universe
+      // is still collecting and must not read as broken. The `triggered` event
+      // that follows carries the new job id; this one names the abandoned job.
+      break;
     case "failed":
       if (u) {
         u.status = "failed";
@@ -294,6 +301,8 @@ export function describe(event: RunEvent): string {
     }
     case "zero_rows":
       return `no usable rows — ${d.reason}`;
+    case "retriggered":
+      return `collector job never started, canceled and retriggered after ${d.after_s}s`;
     case "failed":
       return event.universe ? `failed — ${d.error}` : `run failed — ${d.error}`;
     case "timed_out":

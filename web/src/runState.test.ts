@@ -306,6 +306,42 @@ group("describe", () => {
   });
 });
 
+group("a retriggered collector job", () => {
+  it("is subscribed to and described", () => {
+    // The array is the SSE subscription list: the server names every frame, and
+    // a named frame absent from it never reaches the UI at all, silently.
+    expect(IMPLEMENTED_EVENT_TYPES).toContain("retriggered");
+
+    nextIndex = 1;
+    const line = describeEvent(
+      event("retriggered", {
+        job_id: "j_stalled",
+        after_s: 78.4,
+        reason: "job never started navigating",
+      }),
+    );
+    expect(line).toContain("never started");
+    expect(line).toContain("78.4");
+  });
+
+  it("leaves the universe collecting rather than marking it failed", () => {
+    nextIndex = 1;
+    const state = foldAll(emptyRunState(), [
+      event("triggered", { job_id: "j_stalled", version: "prod" }),
+      event("retriggered", { job_id: "j_stalled", after_s: 78.4 }),
+      event("triggered", { job_id: "j_fresh", version: "prod" }),
+    ]);
+    const zepto = state.universes.zepto;
+
+    // A universe being retried has not failed, and the job it is watching is
+    // the replacement, not the one that was abandoned.
+    expect(zepto.status).toBe("triggered");
+    expect(isSettled(zepto)).toBe(false);
+    expect(zepto.jobId).toBe("j_fresh");
+    expect(zepto.error).toBeNull();
+  });
+});
+
 group("a run-level failure ends the run", () => {
   it("settles the run and stores the reason when `failed` has no universe", () => {
     nextIndex = 1;

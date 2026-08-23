@@ -32,6 +32,10 @@ class EventType(StrEnum):
     ARTIFACT_FAILED = "artifact_failed"
     VALIDATED = "validated"
     ZERO_ROWS = "zero_rows"
+    # Non-terminal: the collector job never started, so it was canceled and a
+    # fresh one was triggered for the same universe. The universe is still
+    # collecting.
+    RETRIGGERED = "retriggered"
     FAILED = "failed"
     TIMED_OUT = "timed_out"
     DONE = "done"
@@ -55,6 +59,7 @@ IMPLEMENTED_EVENT_TYPES = frozenset(
         EventType.ARTIFACT_FAILED,
         EventType.VALIDATED,
         EventType.ZERO_ROWS,
+        EventType.RETRIGGERED,
         EventType.FAILED,
         EventType.TIMED_OUT,
         EventType.DONE,

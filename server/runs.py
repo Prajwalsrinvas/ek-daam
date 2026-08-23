@@ -22,7 +22,7 @@ from typing import Any, Iterable
 
 from pydantic import BaseModel, Field
 
-from .bd_client import BDError, build_client
+from .bd_client import BDError, JobLog, build_client
 from .config import Settings
 from .events import Event, EventStore, EventType, read_events_file, utc_now_iso
 from .heal import (
@@ -66,6 +66,27 @@ UNRESOLVED_LOCATION = "unresolved_location"
 # not downloadable through the API, so the app has a capture it cannot show.
 ARTIFACT_NOT_DELIVERABLE = "capture exists in Bright Data but is not deliverable via API"
 
+# What the retrigger watchdog says it saw. One sentence, because it is shown.
+STALL_REASON = "job never started navigating"
+
+# Ceiling on a best-effort cancel. Every cancel happens on a path that has
+# already gone wrong, so it must not add its own wait to one.
+JOB_CANCEL_TIMEOUT_S = 5.0
+
+
+class _JobHandle:
+    """The Bright Data job a universe currently has in flight.
+
+    Mutable and shared on purpose: the poll loop can replace the job under the
+    stall watchdog, and the timeout handler in `_run_universe` needs to cancel
+    whichever job is live at that moment, not the one that was triggered first.
+    """
+
+    __slots__ = ("job_id",)
+
+    def __init__(self, job_id: str | None = None) -> None:
+        self.job_id = job_id
+
 
 class RunRejected(Exception):
     """A guard said no. The message is shown to the user verbatim, so it has to
@@ -98,6 +119,12 @@ class RunMeta(BaseModel):
 def _new_run_id(prefix: str = "r") -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     return f"{prefix}_{stamp}_{secrets.token_hex(2)}"
+
+
+def _utc_date() -> str:
+    """The day the daily run budget is keyed on. UTC, so it does not roll over
+    twice or not at all depending on where the process happens to run."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def _terse_error(exc: BaseException, limit: int = 240) -> str:
@@ -268,6 +295,13 @@ class RunManager:
         self._rate: dict[str, deque[float]] = defaultdict(deque)
         self._last_run_at: dict[str, float] = {}
         self._last_replay_at: dict[str, float] = {}
+        # Global live-run budget for the current UTC day. In memory only, so a
+        # restart resets it. That is accepted: this is a backstop against
+        # draining collector credits over a day, not accounting, and a counter
+        # that survives restarts would need a store, a schema and a migration to
+        # protect a number nobody audits.
+        self._budget_day: str = _utc_date()
+        self._budget_used: int = 0
         self.settings.runs_dir.mkdir(parents=True, exist_ok=True)
 
     # -- guards ----------------------------------------------------------
@@ -312,6 +346,28 @@ class RunManager:
             raise RunThrottled(
                 f"one {what} per {int(cooldown)}s per client — "
                 f"try again in {int(cooldown - elapsed) + 1}s"
+            )
+
+    def _check_daily_budget(self) -> None:
+        """One budget for the whole day, shared by every client.
+
+        The per-IP cooldown paces one visitor; nothing paced the sum of them, so
+        a day of demo traffic could spend the collector budget outright. Counted
+        here rather than in the run task because a refusal has to reach the
+        caller as a 429 instead of a run that exists and then dies.
+
+        LIVE runs only. Replays re-stream a stored file and self-heals drive the
+        AI flow; neither calls a collector, and both are created through paths of
+        their own that never reach this check.
+        """
+        today = _utc_date()
+        if today != self._budget_day:
+            self._budget_day = today
+            self._budget_used = 0
+        if self._budget_used >= self.settings.daily_run_budget:
+            # Throttled, not rejected: the request is fine, the day is spent.
+            raise RunThrottled(
+                "daily live-run budget reached, try tomorrow or watch the demo replay"
             )
 
     def _active_runs(self) -> int:
@@ -404,6 +460,8 @@ class RunManager:
             )
         self._check_cooldown(client_ip)
         self._check_rate(client_ip)
+        if self.settings.is_live:
+            self._check_daily_budget()
 
         # Build the client BEFORE the run exists. `LiveClient` refuses to start
         # without BD_API_KEY, and finding that out inside the run task created a
@@ -436,6 +494,10 @@ class RunManager:
         self._write_meta(meta)
 
         self._last_run_at[client_ip] = time.monotonic()
+        if self.settings.is_live:
+            # Stamped only once the run is really being created, so a request
+            # refused by any later guard never costs the day a slot.
+            self._budget_used += 1
         self._tasks[run_id] = asyncio.create_task(self._drive(store, meta, targets, client))
         self._prune_memory()
         return meta
@@ -500,6 +562,9 @@ class RunManager:
         client: Any,
     ) -> None:
         uid = universe.id
+        # Shared with the poll loop so the timeout handler below cancels the job
+        # that is actually in flight, which the stall watchdog may have replaced.
+        handle = _JobHandle()
         await store.append(
             EventType.UNIVERSE_DISPATCHED,
             {
@@ -520,16 +585,26 @@ class RunManager:
                 inputs = [
                     {"universe": uid, "keyword": meta.query, "pincode": meta.pincode}
                 ]
+                collector_id = collector_id_for(self.settings, uid)
                 job_id = await client.trigger(
-                    collector_id_for(self.settings, uid), inputs, universe.collector_version
+                    collector_id, inputs, universe.collector_version
                 )
+                handle.job_id = job_id
                 await store.append(
                     EventType.TRIGGERED,
                     {"job_id": job_id, "version": universe.collector_version},
                     universe=uid,
                 )
 
-                results = await self._poll_for_results(store, client, uid, job_id)
+                results = await self._poll_for_results(
+                    store,
+                    client,
+                    uid,
+                    handle,
+                    collector_id,
+                    inputs,
+                    universe.collector_version,
+                )
                 # Raw first: it is the evidence for everything below, including a
                 # location refusal.
                 (store.run_dir / "raw" / f"{uid}.json").write_text(
@@ -626,20 +701,60 @@ class RunManager:
                 {"after_s": self.settings.universe_timeout_s},
                 universe=uid,
             )
+            # The event is written BEFORE the cancel so nothing about the cancel
+            # can mask or replace it. Giving up on the job here does not stop it
+            # at Bright Data: one job was observed running 319s past the app's
+            # timeout, billing the whole time, until it was canceled by hand.
+            # Awaited rather than detached because `_drive` closes the client as
+            # soon as this task returns, which would kill a detached cancel.
+            await self._cancel_job(client, handle.job_id)
         except Exception as exc:
             await store.append(EventType.FAILED, {"error": _terse_error(exc)}, universe=uid)
 
     async def _poll_for_results(
-        self, store: EventStore, client: Any, uid: str, job_id: str
+        self,
+        store: EventStore,
+        client: Any,
+        uid: str,
+        handle: _JobHandle,
+        collector_id: str,
+        inputs: list[dict[str, Any]],
+        version: str,
     ) -> list[dict[str, Any]]:
+        """Poll one universe's job to completion, retriggering a stalled one once.
+
+        THE STALL. Bright Data accepts the trigger in under a second, reports the
+        job as running, and then never allocates a worker: `navigations` and
+        `lines` both sit at 0 for as long as anyone watches. Seen three times in
+        one day on the Instamart collector, while the identical template
+        delivered rows in 36s on the very next trigger. There is nothing to wait
+        for in that state, so waiting out the universe timeout spends the whole
+        budget on a job that was never going to start.
+
+        THE BUDGET IS NOT RESET BY A RETRIGGER. The `asyncio.timeout` around this
+        call lives in `_run_universe` and keeps running across the swap, so a
+        universe still gets its one `universe_timeout_s` in total, not one per
+        job. The replacement inherits whatever is left of it. That is the point:
+        a retrigger is a second chance inside the same deadline, not a way to
+        double a universe's share of the run.
+
+        ONE retrigger per universe per run. If the replacement stalls too, the
+        stall is not this job's bad luck and trying again would only spend the
+        rest of the deadline finding that out, so it is left to time out.
+        """
         interval = (
             self.settings.poll_interval_s
             if self.settings.is_live
             else max(self.settings.mock_step_delay_s, 0.0)
         )
         last_pages_left: int | None = None
+        watching_since = time.monotonic()
+        retriggered = False
 
         while True:
+            job_id = handle.job_id
+            if not job_id:  # unreachable: the caller triggers before it polls
+                raise BDError("no collector job to poll")
             log = await client.job_log(job_id)
             if log.pages_left is not None and log.pages_left > 0 and log.pages_left != last_pages_left:
                 last_pages_left = log.pages_left
@@ -654,8 +769,57 @@ class RunManager:
                 results = await client.fetch_results(job_id)
                 if results is not None:
                     return results
+            elif not retriggered and self._is_stalled(log, watching_since):
+                observed = round(time.monotonic() - watching_since, 1)
+                await self._cancel_job(client, job_id)
+                await store.append(
+                    EventType.RETRIGGERED,
+                    {"job_id": job_id, "after_s": observed, "reason": STALL_REASON},
+                    universe=uid,
+                )
+                handle.job_id = await client.trigger(collector_id, inputs, version)
+                retriggered = True
+                last_pages_left = None
+                # A real second job with a real id, so it is reported the same
+                # way the first one was. The UI reads the job it is watching from
+                # here; `retriggered` names the job that was abandoned.
+                await store.append(
+                    EventType.TRIGGERED,
+                    {"job_id": handle.job_id, "version": version},
+                    universe=uid,
+                )
+                continue
             if interval > 0:
                 await asyncio.sleep(interval)
+
+    def _is_stalled(self, log: JobLog, watching_since: float) -> bool:
+        """A job Bright Data has not started running, as opposed to a slow one.
+
+        Every part of this has to hold. `navigations` absent counts as stalled
+        because a worker that has opened no page reports nothing either way, but
+        `lines` must be an explicit 0: those two are the only evidence there is,
+        and firing on a payload that carries neither would be guessing.
+        """
+        if time.monotonic() - watching_since < self.settings.stall_retrigger_s:
+            return False
+        return log.navigations in (0, None) and log.lines == 0
+
+    async def _cancel_job(self, client: Any, job_id: str | None) -> None:
+        """Best effort, and deliberately silent about failing.
+
+        Every caller is already handling something that went wrong; the job is
+        lost to the run either way and the only thing a cancel saves is the
+        collector time Bright Data would go on spending on it. A cancel that
+        fails must not change one word of what the run reports.
+        """
+        if not job_id:
+            return
+        cancel = getattr(client, "cancel_job", None)
+        if cancel is None:
+            return
+        with contextlib.suppress(Exception):
+            async with asyncio.timeout(JOB_CANCEL_TIMEOUT_S):
+                await cancel(job_id)
 
     async def _capture_screenshot(
         self, store: EventStore, meta: RunMeta, client: Any, uid: str, results: Any

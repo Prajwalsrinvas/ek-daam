@@ -2,7 +2,8 @@
 
 M2 flips `BD_MODE=live` with no code change, so the request shapes this pass
 commits to are worth pinning down now. Endpoint shapes come from the Bright Data
-docs: `POST /dca/trigger`, `GET /dca/log/{job_id}`, `GET /dca/dataset?id=`.
+docs: `POST /dca/trigger`, `GET /dca/log/{job_id}`, `GET /dca/dataset?id=`,
+`POST /dca/jobs/{job_id}/cancel`.
 """
 
 from __future__ import annotations
@@ -80,6 +81,63 @@ async def test_job_log_reads_progress_fields(live_settings) -> None:
 
     assert (log.status, log.pages, log.pages_left) == ("running", 3, 2)
     assert log.finished is False and log.failed is False
+
+
+async def test_job_log_reads_navigations(live_settings) -> None:
+    """A job Bright Data accepted, reports as running, and never allocated a
+    worker to. `runs.py` watches this field precisely because the status does not
+    say it: the job looks alive and has opened nothing."""
+    transport, _ = recording_transport(
+        lambda r: httpx.Response(
+            200, json={"id": "j_stalled", "status": "running", "navigations": 0, "lines": 0}
+        )
+    )
+    client = LiveClient(live_settings, transport=transport)
+
+    log = await client.job_log("j_stalled")
+    await client.aclose()
+
+    assert (log.navigations, log.lines) == (0, 0)
+    assert log.finished is False
+
+
+async def test_navigations_absent_from_the_payload_is_none_not_zero(live_settings) -> None:
+    """Nothing observed is nothing claimed. A missing field is not a reading of
+    zero, and the two are distinguishable at the call site."""
+    transport, _ = recording_transport(
+        lambda r: httpx.Response(200, json={"id": "j", "status": "running"})
+    )
+    client = LiveClient(live_settings, transport=transport)
+
+    log = await client.job_log("j")
+    await client.aclose()
+
+    assert log.navigations is None
+
+
+async def test_cancel_job_posts_to_the_cancel_endpoint(live_settings) -> None:
+    transport, seen = recording_transport(lambda r: httpx.Response(200, json={"done": 1}))
+    client = LiveClient(live_settings, transport=transport)
+
+    ok = await client.cancel_job("j_test09")
+    await client.aclose()
+
+    assert ok is True
+    assert seen[0].method == "POST"
+    assert seen[0].url.path == "/dca/jobs/j_test09/cancel"
+    assert seen[0].headers["authorization"] == "Bearer dummy-test-key"
+
+
+async def test_a_refused_cancel_is_reported_not_raised(live_settings) -> None:
+    """Every caller is already handling something that went wrong. A cancel that
+    fails is not a second failure to report, so it comes back as False."""
+    transport, _ = recording_transport(lambda r: httpx.Response(404, text="no such job"))
+    client = LiveClient(live_settings, transport=transport)
+
+    ok = await client.cancel_job("j_gone")
+    await client.aclose()
+
+    assert ok is False
 
 
 @pytest.mark.parametrize(

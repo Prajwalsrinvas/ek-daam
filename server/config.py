@@ -63,6 +63,14 @@ class Settings:
     # the interval is slower than the scrape poll.
     heal_poll_interval_s: float = 5.0
     heal_timeout_s: float = 600.0
+    # Seconds a collector job may report zero navigations and zero lines before
+    # `runs.py` treats it as a worker that was never allocated, cancels it and
+    # triggers one replacement. A healthy job in this project has delivered rows
+    # in around 36s, so 75s is well clear of a slow one.
+    stall_retrigger_s: float = 75.0
+    # Live runs allowed per UTC day, across all clients. A backstop against
+    # draining collector credits, not accounting: see `RunManager`.
+    daily_run_budget: int = 300
     # universe -> collector version, from SVERSE_COLLECTOR_VERSION_<UNIVERSE>.
     # Only universes that set an override appear here; everything else uses
     # `collector_version`. This is what lets ONE universe run a dev template
@@ -296,6 +304,12 @@ def build_settings() -> Settings:
         ),
         heal_timeout_s=_clamped(
             "SVERSE_HEAL_TIMEOUT_S", _float("SVERSE_HEAL_TIMEOUT_S", 600.0), 10.0, 600.0
+        ),
+        stall_retrigger_s=_clamped(
+            "SVERSE_STALL_RETRIGGER_S", _float("SVERSE_STALL_RETRIGGER_S", 75.0), 15.0, 75.0
+        ),
+        daily_run_budget=int(
+            _clamped("SVERSE_DAILY_RUN_BUDGET", _int("SVERSE_DAILY_RUN_BUDGET", 300), 1, 300)
         ),
     )
 

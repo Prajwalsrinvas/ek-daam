@@ -10,6 +10,9 @@ export type EventType =
   | "artifact_failed"
   | "validated"
   | "zero_rows"
+  // non-terminal: the collector job never started, so it was canceled and one
+  // fresh job was triggered for the same universe
+  | "retriggered"
   | "failed"
   | "timed_out"
   | "done"
