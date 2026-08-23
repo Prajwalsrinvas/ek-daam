@@ -1,5 +1,7 @@
 # EkDaam
 
+![EkDaam comparing one product across four universes at one pincode](docs/hero.png)
+
 EkDaam compares grocery shelf prices across Zepto, Blinkit, and Instamart for one
 product and pincode. Each search runs through Bright Data Scraper Studio, streams
 progress to the browser, and builds a comparison from the returned listings.
@@ -63,7 +65,8 @@ Collector IDs and API keys stay in the environment. The collector source used by
 the app is included in [`collectors/`](collectors/README.md).
 
 After a run completes, click **Replay this run** to stream its saved events again.
-Replay runs are visibly labelled and do not call Bright Data.
+Replay runs are visibly labelled and do not call Bright Data. Past runs from the
+same browser are listed under **My runs**, each with its own replay button.
 
 ## The chaos store
 
@@ -77,6 +80,20 @@ the live universes, because its products and prices are invented.
 Add `--heal` to start a self-heal run instead and print its run id. It reads
 `CHAOS_ADMIN_TOKEN` from the environment and takes `EKDAAM_URL` for a host other
 than the default.
+
+## How I used Scraper Studio
+
+Scraper Studio is the whole data layer. The app has no scraping code of its own. Four collectors run per search: three in production against Zepto, Blinkit and Instamart, and one against a demo store served by this app that is built to break on purpose.
+
+- Typed inputs, not URLs. Every collector takes `{keyword, pincode}` and nothing else. The shelf does not exist at a URL; it exists only after a location is set in the session.
+- Location choreography in the Browser worker. Each production collector opens the app, types the pincode into the site's own location picker, picks a suggestion, and reads the pincode back from the site header before it searches. A row only counts if the site's own resolved area echoes the requested pincode.
+- The site's own JSON, not class names. After the bind, `tag_response` captures the search endpoint each app calls for itself, and the parser reads that payload. Hashed class names rotate; the API contract does not.
+- One output contract. All four collectors emit the same 18 fields with the same types, so the app has one mapper and one comparison.
+- The REST loop. The app triggers with `POST /dca/trigger`, follows `GET /dca/log/{job}` for progress, fetches `GET /dca/dataset`, and cancels and retriggers a job that never starts navigating.
+- Self-healing, end to end. The demo store has two renderings of the same catalogue. A protected flip switches the markup, the chaos collector stops finding rows, and the app runs Studio's `refactor_template` and `resume_automation_job` with `auto_save`, streaming each stage into the run feed. The healed template is promoted only when Bright Data reports `save_new_template` as completed.
+- Code worker where a browser is not needed. The chaos collector fetches server rendered HTML over plain HTTP and parses it with Cheerio, one page load per run.
+
+Live at https://ekdaam.duckdns.org.
 
 ## How it works
 
@@ -103,6 +120,7 @@ the returned location text contains the requested pincode.
 | --- | --- | --- |
 | `GET` | `/api/universes` | Available collectors and status |
 | `POST` | `/api/runs` | Start a search |
+| `GET` | `/api/runs` | List this browser's runs |
 | `GET` | `/api/runs/{id}` | Read a run and its comparison |
 | `GET` | `/api/runs/{id}/events` | Stream run events over SSE |
 | `POST` | `/api/replays/{id}` | Replay a completed run |
@@ -113,6 +131,13 @@ The app stores the submitted query and pincode, collector responses, site-resolv
 location text, and run events. It does not ask for an account or exact coordinates.
 Runtime data stays under the ignored `runs/` directory unless it is deliberately
 exported.
+
+Runs are scoped to the browser that made them. Each visitor is given one opaque
+random cookie, and a run stores only its hash, so the run list and every run page
+show that browser's runs and nothing else. **This is not authentication**: there
+is no account, clearing cookies starts a new identity and makes the old runs
+unreachable, and one run id can be published as a public demo replay. See
+[`docs/RUNBOOK.md`](docs/RUNBOOK.md), "Anonymous run ownership".
 
 A public deployment should set conservative rate limits and restrict trusted proxy
 headers. See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for deployment notes.

@@ -292,7 +292,7 @@ export function describe(event: RunEvent): string {
     case "screenshot":
       return `screenshot ${d.artifact}${d.placeholder ? " (placeholder)" : ""}`;
     case "artifact_failed":
-      return `no page capture — ${d.error} (rows unaffected)`;
+      return `no page capture: ${d.error} (rows unaffected)`;
     case "validated": {
       const reasons = Object.entries((d.reasons as Record<string, number>) ?? {})
         .map(([k, v]) => `${k}×${v}`)
@@ -300,11 +300,11 @@ export function describe(event: RunEvent): string {
       return `${d.rows_kept} kept, ${d.rows_dropped} dropped${reasons ? ` (${reasons})` : ""}`;
     }
     case "zero_rows":
-      return `no usable rows — ${d.reason}`;
+      return `no usable rows: ${d.reason}`;
     case "retriggered":
       return `collector job never started, canceled and retriggered after ${d.after_s}s`;
     case "failed":
-      return event.universe ? `failed — ${d.error}` : `run failed — ${d.error}`;
+      return event.universe ? `failed: ${d.error}` : `run failed: ${d.error}`;
     case "timed_out":
       return event.universe
         ? `timed out after ${d.after_s}s`
@@ -314,7 +314,7 @@ export function describe(event: RunEvent): string {
       // separately because they were never eligible to be compared.
       const demo = num(d.demo_rows);
       return (
-        `run complete — ${d.rows_total} row(s), ${d.groups} matched group(s)` +
+        `run complete: ${d.rows_total} row(s), ${d.groups} matched group(s)` +
         (demo ? `, ${demo} demo row(s) shown separately` : "")
       );
     }

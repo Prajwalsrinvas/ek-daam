@@ -17,7 +17,7 @@ import secrets as _secrets
 from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .bd_client import initials_png
 from .chaos_store import (
@@ -28,8 +28,9 @@ from .chaos_store import (
 )
 from .config import REPO_ROOT, Settings, get_settings
 from .events import heartbeat_frame, parse_last_event_id
+from .owner import OwnerCookieMiddleware, owner_of, owns
 from .registry import listed
-from .runs import RunManager, RunRejected, RunThrottled
+from .runs import RunManager, RunMeta, RunRejected, RunThrottled
 
 log = logging.getLogger("scrapeverse.app")
 
@@ -61,9 +62,45 @@ class ChaosFlipRequest(BaseModel):
     version: str | None = Field(default=None, max_length=20)
 
 
+# What one custom-input row for the chaos collector may say. The collector reads
+# exactly these two and nothing else, so anything more is either a typo or an
+# attempt to push arbitrary payload through the heal endpoint.
+HEAL_INPUT_KEYS = frozenset({"keyword", "pincode"})
+HEAL_INPUT_MAX_ITEMS = 5
+HEAL_INPUT_MAX_VALUE = 200
+
+
 class ChaosHealRequest(BaseModel):
+    """A heal is a token-gated admin call, and it is still the one place a caller
+    hands Bright Data a payload of their own. The prompt is length-capped, and
+    the custom input is capped in count and pinned to the two keys the collector
+    actually reads, so nothing outside that shape can be forwarded."""
+
     prompt: str | None = Field(default=None, max_length=4000)
-    custom_input: list[dict[str, Any]] | None = None
+    custom_input: list[dict[str, Any]] | None = Field(default=None, max_length=HEAL_INPUT_MAX_ITEMS)
+
+    @field_validator("custom_input")
+    @classmethod
+    def _known_keys_only(
+        cls, value: list[dict[str, Any]] | None
+    ) -> list[dict[str, Any]] | None:
+        if value is None:
+            return value
+        for item in value:
+            unknown = set(item) - HEAL_INPUT_KEYS
+            if unknown:
+                raise ValueError(
+                    f"custom_input accepts only {sorted(HEAL_INPUT_KEYS)}, "
+                    f"got {sorted(unknown)}"
+                )
+            for key, entry in item.items():
+                if not isinstance(entry, str):
+                    raise ValueError(f"custom_input {key!r} must be a string")
+                if len(entry) > HEAL_INPUT_MAX_VALUE:
+                    raise ValueError(
+                        f"custom_input {key!r} is longer than {HEAL_INPUT_MAX_VALUE} characters"
+                    )
+        return value
 
 
 def _client_ip(request: Request) -> str:
@@ -90,9 +127,38 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="EkDaam", version="0.1.0", lifespan=lifespan)
     app.state.chaos = chaos
+    # Every request, not only the API ones: the landing page is what a visitor
+    # loads first, so issuing the cookie there means their first run already has
+    # an owner. NOT authentication - see server/owner.py.
+    app.add_middleware(OwnerCookieMiddleware, cookie_secure=settings.cookie_secure)
 
     def manager(request: Request) -> RunManager:
         return request.app.state.runs
+
+    def public_meta(meta: RunMeta) -> dict[str, Any]:
+        """A run's meta as the API reports it, with the owner hash removed.
+
+        Nobody outside the process has any use for it: the server already decides
+        what a requester may see, and the hash of the demo run's owner would
+        otherwise be served to every visitor for nothing. It is not a credential
+        - the cookie is what is compared, and the hash is not reversible - but a
+        value with no reader is a value not worth publishing.
+        """
+        payload = meta.model_dump()
+        payload.pop("owner_hash", None)
+        return payload
+
+    def mine_or_404(request: Request, run_id: str) -> RunMeta:
+        """The one gate in front of every read of a stored run.
+
+        404 rather than 403 on purpose: a 403 confirms that the run id exists,
+        which is exactly the fact a stranger would be probing for. A run that is
+        not yours is indistinguishable from a run that is not there.
+        """
+        meta = manager(request).load_meta(run_id)
+        if meta is None or not owns(meta, owner_of(request), settings.demo_run_id):
+            raise HTTPException(status_code=404, detail=f"no run {run_id!r}")
+        return meta
 
     def require_chaos_token(supplied: str | None) -> None:
         """The chaos admin gate: flipping the store and healing its collector.
@@ -112,6 +178,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=401, detail=f"{CHAOS_TOKEN_HEADER} missing or incorrect"
             )
 
+    def require_admin(request: Request) -> None:
+        """The pacing in front of the chaos admin gate.
+
+        Applied BEFORE the token is compared, so a wrong token spends an attempt
+        too. `compare_digest` stops the token being read one character at a time;
+        this is what stops it being guessed whole at network speed.
+        """
+        try:
+            manager(request).check_admin_rate(_client_ip(request))
+        except RunThrottled as exc:
+            raise HTTPException(status_code=429, detail=str(exc)) from exc
+
     # -- registry --------------------------------------------------------
     @app.get("/api/universes")
     async def get_universes() -> dict[str, Any]:
@@ -129,6 +207,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             # No area list: any valid Indian pincode is accepted, so there is
             # nothing for the server to enumerate.
             "query_allowlist": list(settings.query_allowlist),
+            # The one capture anyone may replay without having run anything.
+            # Null when none is configured, and the UI hides the button then.
+            "demo_run_id": settings.demo_run_id or None,
         }
 
     @app.get("/api/health")
@@ -139,29 +220,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/runs", status_code=202)
     async def post_run(body: RunRequest, request: Request) -> dict[str, Any]:
         try:
-            meta = manager(request).create_run(body.query, body.pincode, _client_ip(request))
+            meta = manager(request).create_run(
+                body.query, body.pincode, _client_ip(request), owner_of(request)
+            )
         except RunThrottled as exc:
             # Nothing wrong with the request, just too soon. Must be caught
             # before RunRejected — it is a subclass.
             raise HTTPException(status_code=429, detail=str(exc)) from exc
         except RunRejected as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return {"run_id": meta.run_id, "meta": meta.model_dump()}
+        return {"run_id": meta.run_id, "meta": public_meta(meta)}
 
     @app.get("/api/runs")
     async def list_runs(request: Request, limit: int = 25) -> dict[str, Any]:
+        """THIS VISITOR'S runs only. A public demo whose listing showed every
+        visitor's searches to the next one is a privacy leak, not a feature."""
         limit = max(1, min(limit, 100))
-        return {"runs": [m.model_dump() for m in manager(request).list_runs(limit)]}
+        runs = manager(request).list_runs(limit, owner_of(request))
+        return {"runs": [public_meta(m) for m in runs]}
 
     @app.get("/api/runs/{run_id}")
     async def get_run(run_id: str, request: Request) -> dict[str, Any]:
         runs = manager(request)
-        meta = runs.load_meta(run_id)
-        if meta is None:
-            raise HTTPException(status_code=404, detail=f"no run {run_id!r}")
+        meta = mine_or_404(request, run_id)
         events = runs.events_for(run_id)
         return {
-            "meta": meta.model_dump(),
+            "meta": public_meta(meta),
             "events": [e.model_dump() for e in events],
             "comparison": runs.comparison_for(run_id).model_dump(),
         }
@@ -173,8 +257,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
     ) -> StreamingResponse:
         runs = manager(request)
-        if runs.load_meta(run_id) is None:
-            raise HTTPException(status_code=404, detail=f"no run {run_id!r}")
+        mine_or_404(request, run_id)
 
         resume_from = parse_last_event_id(last_event_id)
         store = runs.get_store(run_id)
@@ -233,6 +316,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/runs/{run_id}/artifacts/{name}")
     async def get_artifact(run_id: str, name: str, request: Request) -> FileResponse:
+        # An artifact is part of the run's record, so it is scoped with it: a
+        # screenshot names the store and the moment somebody searched.
+        mine_or_404(request, run_id)
         path = manager(request).artifact_path(run_id, name)
         if path is None:
             raise HTTPException(status_code=404, detail="no such artifact")
@@ -240,14 +326,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/replays/{run_id}", status_code=202)
     async def post_replay(run_id: str, request: Request) -> dict[str, Any]:
+        # You can replay your own captures, and the demo run. Nothing else is
+        # even admitted to exist.
+        mine_or_404(request, run_id)
         try:
-            meta = await manager(request).start_replay(run_id, _client_ip(request))
+            meta = await manager(request).start_replay(
+                run_id, _client_ip(request), owner_of(request)
+            )
         except RunThrottled as exc:
             # Must be caught before RunRejected — it is a subclass.
             raise HTTPException(status_code=429, detail=str(exc)) from exc
         except RunRejected as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return {"run_id": meta.run_id, "meta": meta.model_dump()}
+        return {"run_id": meta.run_id, "meta": public_meta(meta)}
 
     # -- the chaos store -------------------------------------------------
     # A grocery store this app serves itself, so the reliability story can be
@@ -293,6 +384,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request,
         token: str | None = Header(default=None, alias=CHAOS_TOKEN_HEADER),
     ) -> dict[str, Any]:
+        require_admin(request)
         require_chaos_token(token)
         store: ChaosStore = request.app.state.chaos
         previous = store.version
@@ -312,17 +404,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         token: str | None = Header(default=None, alias=CHAOS_TOKEN_HEADER),
     ) -> dict[str, Any]:
         """Run Bright Data self-healing against the chaos collector, as a run."""
+        require_admin(request)
         require_chaos_token(token)
         try:
             meta = manager(request).start_heal(
-                prompt=body.prompt, custom_input=body.custom_input
+                prompt=body.prompt,
+                custom_input=body.custom_input,
+                # The operator watches their own heal; it is not listed for
+                # anyone else, the same as every other run.
+                owner_hash=owner_of(request),
             )
         except RunThrottled as exc:
             # Must be caught before RunRejected - it is a subclass.
             raise HTTPException(status_code=429, detail=str(exc)) from exc
         except RunRejected as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return {"run_id": meta.run_id, "meta": meta.model_dump()}
+        return {"run_id": meta.run_id, "meta": public_meta(meta)}
 
     _mount_frontend(app)
     return app
@@ -340,7 +437,7 @@ def _mount_frontend(app: FastAPI) -> None:
         return JSONResponse(
             status_code=503,
             content={
-                "detail": "frontend not built — run `npm --prefix web install && "
+                "detail": "frontend not built: run `npm --prefix web install && "
                 "npm --prefix web run build`",
                 "api": ["/api/universes", "/api/runs", "/api/health"],
             },

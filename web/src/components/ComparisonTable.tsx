@@ -404,7 +404,7 @@ export default function ComparisonTable({
   if (all.length === 0 && demoRows.length === 0) {
     return (
       <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-500">
-        No comparison yet — rows appear here once a universe validates.
+        No comparison yet. Rows appear here once a universe validates.
       </p>
     );
   }
@@ -413,7 +413,7 @@ export default function ComparisonTable({
     <div className="space-y-6">
       <GroupTable
         title="Close matches across universes"
-        subtitle="Same brand & pack, names agree — a heuristic, not a product identity, so check the names in each cell. Shelf price only: no fees, no delivery charges, no member pricing."
+        subtitle="Same brand & pack, names agree. A heuristic, not a product identity, so check the names in each cell. Shelf price only: no fees, no delivery charges, no member pricing."
         groups={comparison.groups}
         universeIds={universeIds}
         registry={registry}
@@ -423,7 +423,7 @@ export default function ComparisonTable({
       />
       <GroupTable
         title={`Single source (${comparison.unmatched.length})`}
-        subtitle="One universe only — either nobody else listed it, or its pack size could not be parsed, and an unknown pack is never matched across universes. Shown, not matched."
+        subtitle="One universe only: either nobody else listed it, or its pack size could not be parsed, and an unknown pack is never matched across universes. Shown, not matched."
         groups={comparison.unmatched}
         universeIds={universeIds}
         registry={registry}

@@ -252,6 +252,69 @@ that finishes without that step is reported as a failure to publish, because an
 approval on its own leaves an unpublished draft while production keeps running
 the broken template.
 
+**A heal that times out here has not necessarily failed there.** `SVERSE_HEAL_TIMEOUT_S`
+is how long the app watches, not how long Bright Data works: a heal that times
+out in the app can still finish minutes later and auto-save a template. The run
+records `timed_out` and nothing else, because the app never claims a promotion it
+did not observe. Check the collector in the Bright Data console before assuming
+the heal failed.
+
+**Both admin endpoints are paced per client IP**, at 10 attempts a minute,
+counted whether or not the token was right. Beyond that they answer 429 before
+the token is even compared, so the token cannot be guessed at network speed. The
+brake is separate from the run rate limit: neither can spend the other's window.
+
+---
+
+## Anonymous run ownership
+
+**This is not authentication.** There is no account, no password and no login.
+Every visitor is handed one opaque random cookie the first time they touch the
+app, and a run remembers only the SHA-256 of whatever cookie created it. That is
+enough to stop a public demo from showing one visitor's searches to the next one,
+and it is not enough for anything else.
+
+What it does:
+
+- `GET /api/runs` lists only the requesting browser's runs. It used to list every
+  visitor's, which on a public demo is a privacy leak.
+- `GET /api/runs/{id}`, its SSE stream, its artifacts, and `POST /api/replays/{id}`
+  answer **404** for a run that is not yours - not 403, because a 403 confirms the
+  id exists, which is the one fact a stranger probing for run ids is after. A run
+  that is not yours is indistinguishable from a run that is not there.
+- A replay belongs to whoever asked for it, not to whoever captured the original.
+- A self-heal run belongs to the operator who started it, so they can watch it.
+  It is token-gated as before and appears in nobody else's listing.
+
+What it does not do, said plainly:
+
+- **Clearing cookies makes a new identity.** The old runs are not deleted; they
+  are simply owned by a cookie nobody holds any more, so they become unreachable
+  from that browser and invisible in every listing.
+- Anyone who copies the cookie value out of a browser has that identity.
+- Runs captured before this existed carry no owner. They still load, and they
+  belong to nobody: invisible in every listing and readable by no visitor, unless
+  one of them is named as the public demo run.
+- It is per browser, not per person: a second browser or a private window is a
+  second identity.
+
+The raw cookie value is never written to disk and never logged. Only its hash
+reaches `meta.json`, so a leaked runs directory hands out no identities.
+
+**The one public run.** `SVERSE_DEMO_RUN_ID` names a single run id that is
+readable and replayable by anyone regardless of who captured it. That is the
+judges' one-click demo and it is public by design; the frontend shows a "Replay
+the demo capture" button on the landing state whenever it is set. Point it at a
+curated capture under `runs/replays/` so it survives a fresh checkout. Leave it
+empty and there is no public run at all.
+
+Cookie attributes: `ekdaam_owner`, HttpOnly, `SameSite=Lax`, `Path=/`, one year.
+`Secure` is decided per request from the scheme and `X-Forwarded-Proto`, because
+Caddy terminates TLS and the app's own scheme is http even in production - a
+cookie marked Secure over plain http is never sent back, and every request would
+look like a new visitor. `SVERSE_COOKIE_SECURE=1`/`0` overrides that for a proxy
+that sets neither. Implementation: `server/owner.py`.
+
 ---
 
 ## Product links: one file, one edit per site
@@ -359,7 +422,7 @@ now scans `runs/replays/` as well; untracked `runs/r_*` dirs are gitignored.
 | `validated` with `known_store: false` | Every kept row IS location-proved; one of the store ids is just not in `SVERSE_<UNIVERSE>_STORE_MAP`. Advisory — usually means a new dark store. Add the id to the map once you have seen it serve the pincode. |
 | `zero_rows {oos}` | Rows came back but nothing kept by the gate is in stock. |
 | `zero_rows {broken}` | The honest default. Empty or unparseable collector output. Also what a payload shape mismatch looks like. |
-| `artifact_failed` | The page capture could not be fetched. **Non-terminal** — the rows still stand and the universe still validates. |
+| `artifact_failed` | A page capture was attempted and the fetch itself failed. **Non-terminal**: the rows still stand and the universe still validates. Not emitted for the ordinary live case, where Bright Data holds a SERP capture it will not serve over the API: that is true of every live universe on every run, so the app shows no capture and reports no failure for one. |
 | `failed` on a universe | That universe only. A run never dies because one universe did. |
 | `retriggered` | Bright Data accepted the job but never started navigating with it (`reason: job never started navigating`). The stalled job was canceled and ONE replacement was triggered for the same universe, inside the same universe timeout. **Non-terminal**: the universe is still collecting, and the `triggered` event right after it carries the new job id. Only one retrigger per universe per run: if the replacement stalls too, the universe times out. |
 | `429` + `daily live-run budget reached, try tomorrow or watch the demo replay` | `SVERSE_DAILY_RUN_BUDGET` LIVE runs have already been started today, across every client. Nothing is wrong with the request; the day is spent. Replays and self-heals call no collector and are not counted, so both still work. The count is held in memory and keyed on the UTC date, so it resets at midnight UTC or on a restart. |

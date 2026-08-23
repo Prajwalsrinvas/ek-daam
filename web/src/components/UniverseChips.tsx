@@ -40,7 +40,7 @@ export default function UniverseChips({
             className="rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500"
           >
             <span className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: u.color }} />
-            {u.display} — {u.status}
+            {u.display}: {u.status}
           </span>
         ))}
       </div>

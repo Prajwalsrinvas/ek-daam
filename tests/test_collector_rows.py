@@ -20,7 +20,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from conftest import FIXTURES, wait_for_done
+from conftest import FIXTURES, carry_cookies, wait_for_done
 from server import mappers
 from server.app import create_app
 from server.bd_client import LiveClient
@@ -880,8 +880,10 @@ def test_refused_rows_do_not_come_back_after_a_restart(settings, tmp_path, datas
 
     assert (guarded.runs_dir / run_id / "raw" / "zepto.json").is_file()
 
-    # Fresh app: nothing about this run is in memory any more.
-    with TestClient(create_app(guarded)) as client:
+    # Fresh app: nothing about this run is in memory any more. Same visitor
+    # though, so the run is still theirs to read.
+    with TestClient(create_app(guarded)) as restarted:
+        client = carry_cookies(client, restarted)
         comparison = client.get(f"/api/runs/{run_id}").json()["comparison"]
 
     assert comparison["row_count"] == 0
@@ -905,7 +907,9 @@ def test_rows_dropped_for_location_stay_dropped_after_a_restart(
         ).json()["run_id"]
         wait_for_done(client, run_id)
 
-    with TestClient(create_app(guarded)) as client:
+    # Same visitor, fresh process: the run is still theirs to read.
+    with TestClient(create_app(guarded)) as restarted:
+        client = carry_cookies(client, restarted)
         assert client.get(f"/api/runs/{run_id}").json()["comparison"]["row_count"] == 5
 
 
@@ -938,19 +942,22 @@ def test_zero_rows_universes_do_not_come_back_after_a_restart(settings, monkeypa
     assert next(e for e in snapshot["events"] if e["type"] == "zero_rows")["data"]["reason"] == "oos"
     assert snapshot["comparison"]["row_count"] == 0
 
-    with TestClient(create_app(settings)) as client:
+    # Same visitor, fresh process: the run is still theirs to read.
+    with TestClient(create_app(settings)) as restarted:
+        client = carry_cookies(client, restarted)
         assert client.get(f"/api/runs/{run_id}").json()["comparison"]["row_count"] == 0
 
 
-def test_an_undeliverable_capture_is_reported_once_per_universe(
+def test_an_undeliverable_capture_is_not_reported_as_a_failure(
     settings, tmp_path, dataset, monkeypatch
 ) -> None:
-    """Live runs always land here, so the feed says the one true thing rather
-    than silently showing no capture.
+    """The undeliverable SERP capture is ignored, not announced.
 
-    The dataset carries a SERP reference on row 3; the client cannot download it.
-    That is one `artifact_failed`, non-terminal, and the universe still
-    validates.
+    The dataset carries a SERP reference on row 3 and the client cannot download
+    it, which is true of EVERY live universe on every run: Bright Data does not
+    serve collector media over the API. Reporting it put an amber "no page
+    capture" line under every universe that had actually succeeded, so the run
+    now says nothing about a capture it was never going to have.
     """
 
     async def undeliverable(self, record, universe_id):
@@ -966,26 +973,23 @@ def test_an_undeliverable_capture_is_reported_once_per_universe(
         snapshot = wait_for_done(client, run_id)
 
     types = [e["type"] for e in snapshot["events"]]
-    failures = [e for e in snapshot["events"] if e["type"] == "artifact_failed"]
 
-    assert len(failures) == 1
-    assert failures[0]["universe"] == "zepto"
-    assert failures[0]["data"]["error"] == ARTIFACT_NOT_DELIVERABLE
-    assert failures[0]["data"]["error"] == (
+    assert "artifact_failed" not in types
+    assert "screenshot" not in types  # nothing to show, and nothing invented
+    assert "validated" in types  # the rows still stand
+    assert types[-1] == "done"
+    # The explanation still exists in one place, it is just not an event.
+    assert ARTIFACT_NOT_DELIVERABLE == (
         "capture exists in Bright Data but is not deliverable via API"
     )
-    assert "screenshot" not in types
-    assert "validated" in types  # non-terminal: the rows still stand
-    assert types[-1] == "done"
 
 
 def test_a_payload_with_no_capture_at_all_says_nothing_about_one(
     settings, tmp_path, dataset, monkeypatch
 ) -> None:
-    """`artifact_failed` means "a capture exists and we cannot deliver it". A
-    collector that reported no capture is a different fact, and inventing the
-    first for the second would be a claim about Bright Data's storage we never
-    observed."""
+    """A collector that reported no capture at all is a different fact from one
+    whose capture cannot be delivered, and neither is announced. The run says
+    nothing about a screenshot in either case, and never invents one."""
 
     async def undeliverable(self, record, universe_id):
         return None
@@ -1014,9 +1018,9 @@ async def test_the_serp_capture_is_found_but_never_downloaded(settings, dataset)
     """Close the loop on the one true sentence: Bright Data captures a SERP
     screenshot per run, it is not deliverable via API, so the app shows none.
 
-    `screenshot_record` still digs the reference out of row 3 — that is how the
-    app KNOWS a capture exists, which is what `artifact_failed` reports — and the
-    live client makes no request for it.
+    `screenshot_record` still digs the reference out of row 3, which is how the
+    app knows a capture exists at all, and the live client makes no request for
+    it. The app shows nothing and says nothing about it.
     """
     live = dataclasses.replace(settings, bd_mode="live", bd_api_key="dummy-test-key")
     seen: list[httpx.Request] = []

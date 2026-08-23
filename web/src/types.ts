@@ -56,6 +56,9 @@ export interface UniversesResponse {
   collector_version: string;
   universes: Universe[];
   query_allowlist: string[];
+  /** The one capture anyone may replay without having run anything. Null when
+   *  none is configured, and the UI offers no demo button then. */
+  demo_run_id: string | null;
 }
 
 export interface NormalizedRow {
@@ -125,6 +128,10 @@ export interface RunMeta {
   universes: string[];
   finished_at: string | null;
 }
+// No owner field: a run is scoped server-side by an anonymous cookie and the
+// hash never leaves the process, so every run the UI receives is already one
+// this browser may see. See server/owner.py.
+
 
 export interface RunSnapshot {
   meta: RunMeta;

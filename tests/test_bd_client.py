@@ -216,8 +216,9 @@ async def test_the_live_client_never_downloads_a_screenshot(live_settings, recor
     unauthenticated GET, from inside our own server, to an address taken out of
     scraped third-party data. Nothing has ever produced such a URL, so it fetched
     nothing while carrying that risk. It is deleted rather than guarded: not
-    making the request is the only fix that cannot be got wrong. `runs.py` turns
-    the missing capture into a non-terminal `artifact_failed`.
+    making the request is the only fix that cannot be got wrong. `runs.py` shows
+    no capture and reports no failure for one, because there was never going to
+    be one to show.
     """
     transport, seen = recording_transport(lambda r: httpx.Response(200, content=b"png"))
     client = LiveClient(live_settings, transport=transport)

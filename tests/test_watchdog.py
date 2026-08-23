@@ -258,6 +258,24 @@ def test_a_live_run_over_the_daily_budget_is_refused_with_429(settings, fake_bd)
     )
 
 
+def test_a_retrigger_spends_the_budget_too(settings, fake_bd) -> None:
+    """A unit is one Bright Data TRIGGER, not one app run.
+
+    The watchdog's replacement job costs exactly what the job it replaced cost,
+    so counting only app runs under-reported the day's real spend by however many
+    jobs were replaced. Here one run triggers twice and that is the whole budget.
+    """
+    bd = fake_bd([STALLED, [("running", 4, 0), ("done", 9, 6)]])
+    budgeted = live(settings, daily_run_budget=2, universe_timeout_s=10.0)
+
+    with TestClient(create_app(budgeted)) as client:
+        wait_for_done(client, start(client))
+        refused = client.post("/api/runs", json={"query": "amul butter", "pincode": "560001"})
+
+    assert len(bd.triggers) == 2  # one run, two jobs
+    assert refused.status_code == 429
+
+
 def test_a_replay_does_not_spend_the_daily_budget(settings, fake_bd) -> None:
     """A replay re-streams a stored file and calls no collector, so charging it
     to a budget that exists to protect collector credits would refuse real runs

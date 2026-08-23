@@ -71,6 +71,13 @@ class Settings:
     # Live runs allowed per UTC day, across all clients. A backstop against
     # draining collector credits, not accounting: see `RunManager`.
     daily_run_budget: int = 300
+    # The ONE run id that is public regardless of who captured it: the judges'
+    # one-click demo. Empty means there is no public run and every run is scoped
+    # to the visitor who made it. See server/owner.py.
+    demo_run_id: str = ""
+    # Whether the owner cookie is marked Secure. None = decide per request from
+    # the scheme and X-Forwarded-Proto, which is what a Caddy deployment needs.
+    cookie_secure: bool | None = None
     # universe -> collector version, from SVERSE_COLLECTOR_VERSION_<UNIVERSE>.
     # Only universes that set an override appear here; everything else uses
     # `collector_version`. This is what lets ONE universe run a dev template
@@ -133,6 +140,16 @@ def _float(name: str, default: float) -> float:
         return float(os.getenv(name, "") or default)
     except ValueError:
         return default
+
+
+def _bool(name: str) -> bool | None:
+    """A three-state flag: on, off, or unset meaning "work it out per request"."""
+    raw = (os.getenv(name) or "").strip().lower()
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return None
 
 
 def _int(name: str, default: int) -> int:
@@ -311,6 +328,8 @@ def build_settings() -> Settings:
         daily_run_budget=int(
             _clamped("SVERSE_DAILY_RUN_BUDGET", _int("SVERSE_DAILY_RUN_BUDGET", 300), 1, 300)
         ),
+        demo_run_id=os.getenv("SVERSE_DEMO_RUN_ID", "").strip(),
+        cookie_secure=_bool("SVERSE_COOKIE_SECURE"),
     )
 
 

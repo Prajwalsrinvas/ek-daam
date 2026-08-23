@@ -187,8 +187,9 @@ pasted into a new collector as it is, but nothing here has been proved by a run.
 `/chaos`, which exists so a collector can be broken and repaired on demand:
 `server/chaos_store.py` renders one catalogue as two structurally different pages
 and a token-protected endpoint decides which one is served. Set `STORE_BASE` at
-the top of `chaos/interaction.js` to the deployed app's own address before
-creating the collector.
+the top of `chaos/interaction.js` to the deployed store host before creating the
+collector; the host must be a real hostname, because Bright Data refuses a raw IP
+address and some free dynamic-DNS domains.
 
 There is no JSON API behind that store and no machine-readable copy of the
 catalogue in the page, so every field is read out of the DOM. The selectors

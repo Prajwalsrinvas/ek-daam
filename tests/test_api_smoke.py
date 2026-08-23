@@ -377,6 +377,9 @@ def test_unknown_run_is_a_404(client: TestClient) -> None:
 
 
 def test_runs_listing_includes_the_new_run(client: TestClient) -> None:
+    """One TestClient is one browser, so this is the listing of THIS visitor's
+    runs. The listing is scoped to the anonymous owner cookie now; what one
+    visitor can and cannot see is pinned in tests/test_ownership.py."""
     run_id = client.post(
         "/api/runs", json={"query": "amul butter", "pincode": "560001"}
     ).json()["run_id"]

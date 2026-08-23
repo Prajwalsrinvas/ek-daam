@@ -8,7 +8,7 @@
 //
 // Set STORE_BASE to the deployed app's own address before creating the
 // collector. The store lives at <host>/chaos/search.
-const STORE_BASE = 'http://139.59.86.74.sslip.io/chaos/search';
+const STORE_BASE = 'https://YOUR-PUBLIC-HOST/chaos/search';
 
 const keyword = input.keyword;
 const pincode = input.pincode;

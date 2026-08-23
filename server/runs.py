@@ -35,7 +35,6 @@ from .heal import (
 from .mappers import (
     as_records,
     get_mapper,
-    has_screenshot_reference,
     screenshot_record,
     unwrap_record,
 )
@@ -64,10 +63,19 @@ UNRESOLVED_LOCATION = "unresolved_location"
 # The whole truth about page captures on the live path, in one sentence, in one
 # place. Bright Data takes a SERP screenshot on every run; its collector media is
 # not downloadable through the API, so the app has a capture it cannot show.
+#
+# NOT AN EVENT any more. This is the normal state of every live universe rather
+# than a fault in one, so the app stops reporting it: see `_capture_screenshot`.
+# The sentence stays here because it is the explanation, and the docs and tests
+# quote it.
 ARTIFACT_NOT_DELIVERABLE = "capture exists in Bright Data but is not deliverable via API"
 
 # What the retrigger watchdog says it saw. One sentence, because it is shown.
 STALL_REASON = "job never started navigating"
+
+# Attempts per minute per client IP on the chaos admin endpoints, counted
+# whether or not the token was right.
+ADMIN_ATTEMPTS_PER_MIN = 10
 
 # Ceiling on a best-effort cancel. Every cancel happens on a path that has
 # already gone wrong, so it must not add its own wait to one.
@@ -114,6 +122,11 @@ class RunMeta(BaseModel):
     source_run_id: str | None = None
     universes: list[str] = Field(default_factory=list)
     finished_at: str | None = None
+    # SHA-256 of the visitor's `ekdaam_owner` cookie, and never the cookie
+    # itself. Defaulted so runs captured before ownership existed still load:
+    # they carry None, which belongs to nobody and is therefore invisible in
+    # every listing. NOT authentication - see server/owner.py.
+    owner_hash: str | None = None
 
 
 def _new_run_id(prefix: str = "r") -> str:
@@ -293,6 +306,11 @@ class RunManager:
         self._heal_tasks: dict[str, asyncio.Task[None]] = {}
         self._rows: dict[str, dict[str, list[NormalizedRow]]] = {}
         self._rate: dict[str, deque[float]] = defaultdict(deque)
+        # A window of its own for the chaos admin endpoints. Shared with the run
+        # limiter it would mean a stranger guessing tokens could use up a real
+        # visitor's runs for the minute, and a real visitor's runs could stop the
+        # operator flipping the store.
+        self._admin_rate: dict[str, deque[float]] = defaultdict(deque)
         self._last_run_at: dict[str, float] = {}
         self._last_replay_at: dict[str, float] = {}
         # Global live-run budget for the current UTC day. In memory only, so a
@@ -305,19 +323,30 @@ class RunManager:
         self.settings.runs_dir.mkdir(parents=True, exist_ok=True)
 
     # -- guards ----------------------------------------------------------
-    def _check_rate(self, client_ip: str) -> None:
-        window = self._rate[client_ip]
+    def _check_window(
+        self, windows: dict[str, deque[float]], client_ip: str, limit: int, what: str
+    ) -> None:
+        """N attempts per rolling minute per client IP. One implementation, two
+        windows: runs and chaos admin calls are paced separately."""
+        window = windows[client_ip]
         now = time.monotonic()
         while window and now - window[0] > 60.0:
             window.popleft()
-        if len(window) >= self.settings.rate_limit_per_min:
+        if len(window) >= limit:
             # Throttled, not rejected: the request is fine, the moment is not.
             # A 400 told the client to change its input, which is exactly the
             # wrong advice — the fix is to wait.
-            raise RunThrottled(
-                f"rate limit: {self.settings.rate_limit_per_min} runs per minute per client"
-            )
+            raise RunThrottled(f"rate limit: {limit} {what} per minute per client")
         window.append(now)
+
+    def _check_rate(self, client_ip: str) -> None:
+        self._check_window(self._rate, client_ip, self.settings.rate_limit_per_min, "runs")
+
+    def check_admin_rate(self, client_ip: str) -> None:
+        """The brake on the chaos admin endpoints, applied BEFORE the token is
+        checked so a wrong token costs an attempt too. Without that, the token
+        could be guessed at whatever rate the network allows."""
+        self._check_window(self._admin_rate, client_ip, ADMIN_ATTEMPTS_PER_MIN, "admin attempts")
 
     def _check_cooldown(
         self, client_ip: str, stamps: dict[str, float] | None = None, what: str = "run"
@@ -344,7 +373,7 @@ class RunManager:
         elapsed = time.monotonic() - last
         if elapsed < cooldown:
             raise RunThrottled(
-                f"one {what} per {int(cooldown)}s per client — "
+                f"one {what} per {int(cooldown)}s per client, "
                 f"try again in {int(cooldown - elapsed) + 1}s"
             )
 
@@ -369,6 +398,23 @@ class RunManager:
             raise RunThrottled(
                 "daily live-run budget reached, try tomorrow or watch the demo replay"
             )
+
+    def _spend_budget(self) -> None:
+        """One unit spent. A unit is one Bright Data TRIGGER, not one app run.
+
+        The watchdog's retrigger sends a second job for the same universe, and
+        that job costs exactly what the first one cost, so counting only app runs
+        under-reported the day's real spend by however many jobs were replaced.
+        Rolls the day over here as well, because a process that has been up since
+        yesterday can reach this without passing the check first.
+        """
+        if not self.settings.is_live:
+            return
+        today = _utc_date()
+        if today != self._budget_day:
+            self._budget_day = today
+            self._budget_used = 0
+        self._budget_used += 1
 
     def _active_runs(self) -> int:
         """LIVE runs in flight. Replays are deliberately not counted: a re-stream
@@ -435,28 +481,34 @@ class RunManager:
             )
         if not self.settings.query_allowed(query):
             raise RunRejected(
-                f"query {query!r} is not on the demo allowlist — "
-                f"allowed: {', '.join(self.settings.query_allowlist)}"
+                f"query {query!r} is not on the demo allowlist. "
+                f"Allowed: {', '.join(self.settings.query_allowlist)}"
             )
 
         targets = dispatchable(self.settings)
         if not targets:
             raise RunRejected(
-                "no universe is dispatchable right now — "
+                "no universe is dispatchable right now: "
                 + ("wire a collector id in the environment" if self.settings.is_live
                    else "no mock fixture is available")
             )
         return query, pincode
 
     # -- run creation ----------------------------------------------------
-    def create_run(self, query: str, pincode: str, client_ip: str = "local") -> RunMeta:
+    def create_run(
+        self,
+        query: str,
+        pincode: str,
+        client_ip: str = "local",
+        owner_hash: str | None = None,
+    ) -> RunMeta:
         query, pincode = self._validate_request(query, pincode)
 
         if self._active_runs() >= self.settings.max_concurrent_runs:
             # Throttled, not rejected: nothing is wrong with the request.
             raise RunThrottled(
-                f"a run is already in flight (max {self.settings.max_concurrent_runs}) — "
-                "wait for it to finish"
+                f"a run is already in flight (max {self.settings.max_concurrent_runs}). "
+                "Wait for it to finish"
             )
         self._check_cooldown(client_ip)
         self._check_rate(client_ip)
@@ -487,6 +539,7 @@ class RunManager:
             mode=self.settings.bd_mode,
             created_at=utc_now_iso(),
             universes=[u.id for u in targets],
+            owner_hash=owner_hash,
         )
         self._stores[run_id] = store
         self._metas[run_id] = meta
@@ -494,10 +547,9 @@ class RunManager:
         self._write_meta(meta)
 
         self._last_run_at[client_ip] = time.monotonic()
-        if self.settings.is_live:
-            # Stamped only once the run is really being created, so a request
-            # refused by any later guard never costs the day a slot.
-            self._budget_used += 1
+        # Stamped only once the run is really being created, so a request refused
+        # by any later guard never costs the day a slot.
+        self._spend_budget()
         self._tasks[run_id] = asyncio.create_task(self._drive(store, meta, targets, client))
         self._prune_memory()
         return meta
@@ -784,6 +836,9 @@ class RunManager:
                     universe=uid,
                 )
                 handle.job_id = await client.trigger(collector_id, inputs, version)
+                # A second real trigger against the same collector, so it costs
+                # the day's budget the same as the first one did.
+                self._spend_budget()
                 retriggered = True
                 last_pages_left = None
                 # A real second job with a real id, so it is reported the same
@@ -837,10 +892,11 @@ class RunManager:
         a red line in the feed for a universe that had actually succeeded. The
         capture is evidence, so its absence stays visible rather than swallowed.
 
-        Live runs always land here. Bright Data captures a SERP screenshot per
-        run and does not deliver collector media over the API, so the app has one
-        honest thing to say about it — and says it once per universe rather than
-        silently showing nothing.
+        The undeliverable SERP capture is the one case that is NOT reported.
+        Bright Data captures a screenshot per run and does not deliver collector
+        media over the API, so that is the normal state of every live universe
+        rather than a fault in one. Reporting it made every successful universe
+        look like it had lost something.
         """
         try:
             blob = await client.fetch_screenshot(screenshot_record(results), uid)
@@ -850,12 +906,17 @@ class RunManager:
             )
             return
         if not blob:
-            if has_screenshot_reference(results):
-                await store.append(
-                    EventType.ARTIFACT_FAILED,
-                    {"error": ARTIFACT_NOT_DELIVERABLE},
-                    universe=uid,
-                )
+            # Nothing was delivered, and on the live path nothing ever is:
+            # Bright Data captures a SERP screenshot on every run and does not
+            # serve collector media over the API. See ARTIFACT_NOT_DELIVERABLE.
+            #
+            # That used to be an `artifact_failed` per universe, which meant
+            # every live universe that had SUCCEEDED carried an amber "no page
+            # capture" line in the feed. It read as a failure, it fired on all
+            # of them at once, and there is nothing a viewer or an operator can
+            # do about it. So the undeliverable capture is simply ignored: no
+            # screenshot is shown and nothing is claimed about one. A fetch that
+            # really does fail is still reported, above.
             return
         name = f"{uid}.png"
         (store.run_dir / "artifacts" / name).write_bytes(blob)
@@ -871,26 +932,31 @@ class RunManager:
         )
 
     # -- replay ----------------------------------------------------------
-    async def start_replay(self, source_run_id: str, client_ip: str = "local") -> RunMeta:
+    async def start_replay(
+        self,
+        source_run_id: str,
+        client_ip: str = "local",
+        owner_hash: str | None = None,
+    ) -> RunMeta:
         source = self.load_meta(source_run_id)
         if source is None:
             raise RunRejected(f"no stored run {source_run_id!r}")
         if source.replay:
-            raise RunRejected("that run is itself a replay — replay the original capture instead")
+            raise RunRejected("that run is itself a replay. Replay the original capture instead")
         if source.status != "done":
             # A run still in flight has a file that is still being appended to,
             # and a failed or cancelled one is a partial record. Re-streaming
             # either presents an incomplete capture as a complete one.
             raise RunRejected(
-                f"run {source_run_id!r} is {source.status!r}, not done — "
-                "only a completed capture can be replayed"
+                f"run {source_run_id!r} is {source.status!r}, not done. "
+                "Only a completed capture can be replayed"
             )
 
         # Replays were the one entrance with no guard on it at all: any client
         # could open unbounded concurrent re-streams, each holding a task, a
         # file handle and every event in memory.
         if self._active_replays(client_ip) >= 1:
-            raise RunThrottled("a replay is already streaming for this client — wait for it to end")
+            raise RunThrottled("a replay is already streaming for this client. Wait for it to end")
         self._check_cooldown(client_ip, self._last_replay_at, what="replay")
 
         source_dir = self.read_dir(source_run_id)
@@ -918,6 +984,10 @@ class RunManager:
             replay=True,
             source_run_id=source_run_id,
             universes=source.universes,
+            # The replay belongs to whoever asked for it, NOT to whoever captured
+            # the original. That is what lets the public demo run be replayed by
+            # a visitor without the replay then showing up for everyone else.
+            owner_hash=owner_hash,
         )
         self._stores[run_id] = store
         self._metas[run_id] = meta
@@ -973,6 +1043,7 @@ class RunManager:
         custom_input: list[dict[str, Any]] | None = None,
         universe_id: str = "chaos",
         client: Any | None = None,
+        owner_hash: str | None = None,
     ) -> RunMeta:
         """Repair one collector through Bright Data self-healing, as a run.
 
@@ -1012,6 +1083,9 @@ class RunManager:
             mode=self.settings.bd_mode,
             created_at=utc_now_iso(),
             universes=[universe_id],
+            # The operator who triggered the heal can watch it. Nobody else sees
+            # it in a listing, the same as any other run.
+            owner_hash=owner_hash,
         )
         self._stores[run_id] = store
         self._metas[run_id] = meta
@@ -1054,6 +1128,12 @@ class RunManager:
             meta.status = "cancelled"
             raise
         except TimeoutError:
+            # What this does and does not say. The app stopped watching; Bright
+            # Data did not stop working. A heal that times out here can still
+            # finish there minutes later and auto-save a template. So the run
+            # records `timed_out` and nothing else: it never reports a promotion
+            # it did not observe, in either direction. Check the collector in the
+            # Bright Data console before assuming the heal failed.
             await store.append(
                 EventType.TIMED_OUT,
                 {"after_s": self.settings.heal_timeout_s},
@@ -1176,7 +1256,15 @@ class RunManager:
     def comparison_for(self, run_id: str) -> Comparison:
         return match(self.rows_for(run_id))
 
-    def list_runs(self, limit: int = 25) -> list[RunMeta]:
+    def list_runs(self, limit: int = 25, owner_hash: str | None = None) -> list[RunMeta]:
+        """One visitor's runs, newest first.
+
+        Scoped, never global: this app is a public demo and the listing used to
+        hand every visitor's searches to the next one. An owner that owns nothing
+        gets an empty list, and so does a request with no owner at all. Runs
+        stored before ownership existed carry no owner and are therefore listed
+        for nobody. NOT authentication - see server/owner.py.
+        """
         metas: dict[str, RunMeta] = {}
         if self.settings.runs_dir.is_dir():
             for pattern in ("*/meta.json", "replays/*/meta.json"):
@@ -1187,7 +1275,12 @@ class RunManager:
                         continue
                     metas[meta.run_id] = meta
         metas.update(self._metas)
-        return sorted(metas.values(), key=lambda m: m.created_at, reverse=True)[:limit]
+        mine = [
+            meta
+            for meta in metas.values()
+            if owner_hash and meta.owner_hash and meta.owner_hash == owner_hash
+        ]
+        return sorted(mine, key=lambda m: m.created_at, reverse=True)[:limit]
 
     def artifact_path(self, run_id: str, name: str) -> Path | None:
         if not ARTIFACT_NAME_RE.match(name):

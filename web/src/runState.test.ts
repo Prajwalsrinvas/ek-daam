@@ -380,10 +380,10 @@ group("a run-level failure ends the run", () => {
   it("tells the two apart in the feed line", () => {
     nextIndex = 1;
     expect(describeEvent(event("failed", { error: "boom" }, { universe: "zepto" }))).toBe(
-      "failed — boom",
+      "failed: boom",
     );
     expect(describeEvent(event("failed", { error: "boom" }, { universe: null }))).toBe(
-      "run failed — boom",
+      "run failed: boom",
     );
   });
 

@@ -17,7 +17,7 @@ from server.app import create_app
 from server.resolve import NormalizedRow
 from server.runs import validate_rows, zero_rows_reason
 
-from conftest import FIXTURES, wait_for_done
+from conftest import FIXTURES, carry_cookies, wait_for_done
 
 
 RESOLVED_560001 = "Bengaluru - 560001, Karnataka"
@@ -196,8 +196,10 @@ def test_a_curated_replay_under_runs_replays_is_streamable(settings) -> None:
     curated.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(settings.runs_dir / run_id), str(curated))
 
-    # Fresh app: nothing about that run is in memory any more.
-    with TestClient(create_app(settings)) as client:
+    # Fresh app: nothing about that run is in memory any more. Same visitor,
+    # so the capture is still theirs to read and replay.
+    with TestClient(create_app(settings)) as restarted:
+        client = carry_cookies(client, restarted)
         snapshot = client.get(f"/api/runs/{run_id}")
         listed = client.get("/api/runs").json()["runs"]
         replay_id = client.post(f"/api/replays/{run_id}").json()["run_id"]
@@ -311,7 +313,8 @@ def test_a_run_that_never_finished_cannot_be_replayed(settings, tmp_path: Path) 
     meta["status"] = "failed"
     meta_path.write_text(json.dumps(meta), encoding="utf-8")
 
-    with TestClient(create_app(settings)) as client:
+    with TestClient(create_app(settings)) as restarted:
+        client = carry_cookies(client, restarted)
         refused = client.post(f"/api/replays/{run_id}")
 
     assert refused.status_code == 400

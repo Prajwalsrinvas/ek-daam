@@ -24,6 +24,18 @@ def wait_for_done(client: TestClient, run_id: str, timeout: float = 15.0) -> dic
     raise AssertionError(f"run {run_id} did not reach done within {timeout}s")
 
 
+def carry_cookies(source: TestClient, target: TestClient) -> TestClient:
+    """Same browser, new server process.
+
+    A stored run is scoped to the anonymous owner cookie that created it (see
+    server/owner.py), and every `TestClient` starts with an empty cookie jar. A
+    test about what survives a restart has to carry the cookie across or it is
+    quietly testing ownership instead of disk fallback.
+    """
+    target.cookies.update(source.cookies)
+    return target
+
+
 def make_settings(runs_dir: Path, **overrides) -> Settings:
     """Test settings: mock mode, zero delays, an isolated runs directory.
 

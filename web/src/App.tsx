@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
-import { eventsUrl, getRun, getUniverses, startReplay, startRun } from "./api";
+import { eventsUrl, getRun, getRuns, getUniverses, startReplay, startRun } from "./api";
 import ComparisonTable from "./components/ComparisonTable";
 import EventFeed from "./components/EventFeed";
+import MyRuns from "./components/MyRuns";
 import Screenshots from "./components/Screenshots";
 import UniverseChips from "./components/UniverseChips";
 import {
@@ -11,7 +12,7 @@ import {
   IMPLEMENTED_EVENT_TYPES,
   type RunState,
 } from "./runState";
-import type { Comparison, RunEvent, Universe } from "./types";
+import type { Comparison, RunEvent, RunMeta, Universe } from "./types";
 
 type Action = { kind: "reset" } | { kind: "event"; event: RunEvent };
 
@@ -45,6 +46,10 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  // This browser's own runs. The server scopes the listing to the anonymous
+  // owner cookie, so nothing here has to be filtered client-side.
+  const [myRuns, setMyRuns] = useState<RunMeta[]>([]);
+  const [demoRunId, setDemoRunId] = useState<string | null>(null);
   const source = useRef<EventSource | null>(null);
 
   // Which run the UI is currently showing, and how many comparison fetches have
@@ -55,16 +60,27 @@ export default function App() {
   const showing = useRef<string | null>(null);
   const fetchSeq = useRef(0);
 
+  // Failing quietly is right here and only here: "My runs" is a convenience
+  // panel, and a listing that could not be fetched must not put an error banner
+  // over a run the visitor is watching.
+  const refreshMyRuns = useCallback(() => {
+    getRuns()
+      .then((data) => setMyRuns(data.runs))
+      .catch(() => undefined);
+  }, []);
+
   useEffect(() => {
     getUniverses()
       .then((data) => {
         setRegistry(data.universes);
         setServerMode(data.mode);
         setQueryAllowlist(data.query_allowlist);
+        setDemoRunId(data.demo_run_id);
       })
       .catch((e: Error) => setError(e.message));
+    refreshMyRuns();
     return () => source.current?.close();
-  }, []);
+  }, [refreshMyRuns]);
 
   const refreshComparison = useCallback((runId: string) => {
     const seq = ++fetchSeq.current;
@@ -78,7 +94,7 @@ export default function App() {
         if (showing.current !== runId) return;
         // Swallowing this left the table saying "no comparison yet" for a run
         // that had really produced one — a silent wrong answer.
-        setComparisonError(`could not load the comparison — ${e.message}`);
+        setComparisonError(`could not load the comparison: ${e.message}`);
       });
   }, []);
 
@@ -135,6 +151,12 @@ export default function App() {
     [refreshComparison],
   );
 
+  // A run only joins the listing once it is stored as done, so the listing is
+  // re-read when one ends rather than when one starts.
+  useEffect(() => {
+    if (state.done) refreshMyRuns();
+  }, [state.done, state.runId, refreshMyRuns]);
+
   const inFlight = Boolean(state.runId) && !state.done;
   const pincodeReady = pincode.length === PINCODE_LENGTH;
 
@@ -153,18 +175,25 @@ export default function App() {
     }
   }
 
+  const replayRun = useCallback(
+    async (sourceRunId: string) => {
+      setError(null);
+      setStarting(true);
+      try {
+        const { run_id } = await startReplay(sourceRunId);
+        subscribe(run_id);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setStarting(false);
+      }
+    },
+    [subscribe],
+  );
+
   async function onReplay() {
     if (!state.runId || starting) return;
-    setError(null);
-    setStarting(true);
-    try {
-      const { run_id } = await startReplay(state.runId);
-      subscribe(run_id);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setStarting(false);
-    }
+    await replayRun(state.runId);
   }
 
   const isMock = (state.mode ?? serverMode) === "mock";
@@ -178,20 +207,20 @@ export default function App() {
       <header className="space-y-1">
         <h1 className="text-2xl font-bold">EkDaam</h1>
         <p className="text-sm text-slate-600">
-          Ekdam best price — one product, three universes, one pincode. Collectors race
+          Ekdam best price: one product, every universe, one pincode. Collectors race
           live; every observed state becomes an event. Shelf prices only, sahi sahi.
         </p>
       </header>
 
       {state.replay && (
         <div className="rounded border-2 border-amber-400 bg-amber-50 px-4 py-2 font-semibold text-amber-900">
-          REPLAY — these events were captured earlier and are being re-streamed. Nothing here is live.
+          REPLAY. These events were captured earlier and are being re-streamed. Nothing here is live.
         </div>
       )}
       {isMock && (
         <div className="rounded border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700">
-          <strong>MOCK</strong> — BD_MODE=mock. Rows come from a committed fixture, not from a live
-          collector run, and only one universe has one — so a mock run has nothing to compare.
+          <strong>MOCK</strong>. BD_MODE=mock. Rows come from a committed fixture, not from a live
+          collector run, and only one universe has one, so a mock run has nothing to compare.
         </div>
       )}
 
@@ -247,17 +276,37 @@ export default function App() {
             Replay this run
           </button>
         )}
+        {/* The one capture anyone may re-stream without having run anything.
+            Offered only before this browser is watching a run, so it never sits
+            next to a live one competing for the same button. */}
+        {demoRunId && !state.runId && (
+          <button
+            type="button"
+            onClick={() => replayRun(demoRunId)}
+            disabled={starting}
+            className="rounded border border-amber-400 bg-amber-50 px-4 py-2 text-amber-900 disabled:opacity-40"
+          >
+            Replay the demo capture
+          </button>
+        )}
         {queryAllowlist.length > 0 && (
           <span className="text-xs text-slate-500">allowed: {queryAllowlist.join(", ")}</span>
         )}
       </form>
+
+      <MyRuns
+        runs={myRuns}
+        onReplay={replayRun}
+        busy={starting || inFlight}
+        showingRunId={state.runId ?? null}
+      />
 
       {error && (
         <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</p>
       )}
       {state.error && (
         <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
-          The run stopped — {state.error}
+          The run stopped: {state.error}
         </p>
       )}
 
@@ -281,7 +330,7 @@ export default function App() {
         </p>
       ) : nothingToCompare ? (
         <p className="rounded border border-slate-200 bg-white p-4 text-sm text-slate-500">
-          Run complete — no comparable rows. Every universe either failed the location proof,
+          Run complete, no comparable rows. Every universe either failed the location proof,
           returned nothing usable, or produced no row that survived the validation gate.
         </p>
       ) : (
