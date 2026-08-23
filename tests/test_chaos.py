@@ -9,23 +9,29 @@ emits, not Bright Data.
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
-from conftest import make_settings, wait_for_done
+from conftest import FIXTURES, make_settings, wait_for_done
 from server.app import create_app
 from server.chaos_store import (
     CATALOG,
     VERSIONS,
     ChaosStore,
+    catalog_rows,
+    matching,
     render_page,
+    render_product_page,
     resolved_area_for,
     search,
     store_id_for,
+    tile_for_image,
 )
+from server.resolve import NormalizedRow, match
 from server.mappers import get_mapper
 from server.mappers.chaos import map_chaos
 from server.registry import universes
@@ -54,6 +60,12 @@ _V2_ROW = re.compile(r'<tr class="listing-row".*?</tr>', re.S)
 def _one(pattern: str, block: str) -> str | None:
     found = re.search(pattern, block, re.S)
     return found.group(1) if found else None
+
+
+def _blocks(version: str, page: str) -> list[str]:
+    """The listing blocks only. The stylesheet mentions `data-match` too, so a
+    whole-page count would score the CSS as a product."""
+    return (_V1_CARD if version == "v1" else _V2_ROW).findall(page)
 
 
 def _rows_v1(page: str) -> list[tuple]:
@@ -142,18 +154,38 @@ def test_a_malformed_pincode_is_treated_as_no_location(version: str) -> None:
 
 
 @pytest.mark.parametrize("version", VERSIONS)
-def test_the_query_filters_the_shelf(version: str) -> None:
-    all_products = render_page(version, "", PINCODE)
-    butter = render_page(version, "amul butter", PINCODE)
-    nothing = render_page(version, "zzzz", PINCODE)
-
+def test_the_whole_shelf_renders_whatever_was_searched_for(version: str) -> None:
+    """A store that hid everything it was not asked about would make the demo
+    depend on typing the one keyword the catalogue was built around. Every
+    product renders for every query; the query orders the shelf instead."""
     rows = _rows_v1 if version == "v1" else _rows_v2
-    names = [row[1] for row in rows(butter)]
 
-    assert len(rows(all_products)) == len(CATALOG)
-    assert names and all("Amul" in name for name in names)
-    assert rows(nothing) == []
-    assert "No products matched" in nothing
+    for query in ("", "amul butter", "zzzz"):
+        assert len(rows(render_page(version, query, PINCODE))) == len(CATALOG)
+
+
+@pytest.mark.parametrize("version", VERSIONS)
+def test_the_query_orders_and_marks_the_shelf_rather_than_cutting_it(version: str) -> None:
+    page = render_page(version, "amul butter", PINCODE)
+    rows = _rows_v1 if version == "v1" else _rows_v2
+    hits = matching("amul butter")
+
+    # The matches lead, in catalogue order, and the rest of the shelf follows.
+    assert [row[0] for row in rows(page)][: len(hits)] == [p.product_id for p in hits]
+    assert len(hits) < len(CATALOG)
+    marked = [b for b in _blocks(version, page) if 'data-match="true"' in b]
+    assert len(marked) == len(hits)
+    assert len(_blocks(version, page)) - len(marked) == len(CATALOG) - len(hits)
+
+
+@pytest.mark.parametrize("version", VERSIONS)
+def test_a_search_that_matches_nothing_says_so_and_still_shows_the_shelf(version: str) -> None:
+    page = render_page(version, "zzzz", PINCODE)
+    rows = _rows_v1 if version == "v1" else _rows_v2
+
+    assert "No products matched" in page
+    assert not any('data-match="true"' in b for b in _blocks(version, page))
+    assert len(rows(page)) == len(CATALOG)
 
 
 def test_the_store_route_serves_the_active_version(client: TestClient) -> None:
@@ -164,6 +196,56 @@ def test_the_store_route_serves_the_active_version(client: TestClient) -> None:
     assert 'data-store-version="v1"' in page.text
     # /chaos/search is the same page under a more site-like address.
     assert client.get("/chaos/search", params={"pincode": PINCODE}).status_code == 200
+
+
+@pytest.mark.parametrize("version", VERSIONS)
+def test_every_listing_links_to_its_own_product_page(version: str) -> None:
+    page = render_page(version, "", PINCODE)
+
+    for product in CATALOG:
+        assert f'href="/chaos/product/{product.product_id}?pincode={PINCODE}"' in page
+
+
+def test_the_product_page_shows_one_product_and_refuses_an_unknown_id() -> None:
+    page = render_product_page("cm-1016", PINCODE)
+
+    assert page is not None
+    assert "Surf Excel Easy Wash Detergent Powder" in page
+    assert "₹132" in page and "₹145" in page
+    assert resolved_area_for(PINCODE) in page
+    assert render_product_page("cm-9999", PINCODE) is None
+
+
+def test_the_product_page_shows_no_price_without_a_pincode() -> None:
+    """The same rule the shelf follows: a price with no delivery area behind it
+    is not a price anybody can act on."""
+    page = render_product_page("cm-1016", "")
+
+    assert page is not None
+    assert "Enter a 6-digit pincode" in page
+    assert "₹132" not in page
+
+
+def test_the_product_route_serves_the_page_and_404s_an_unknown_id(client: TestClient) -> None:
+    found = client.get("/chaos/product/cm-1001", params={"pincode": PINCODE})
+
+    assert found.status_code == 200
+    assert "Amul Butter Salted" in found.text
+    assert client.get("/chaos/product/cm-9999").status_code == 404
+
+
+def test_every_product_thumbnail_is_its_own_tile(client: TestClient) -> None:
+    """The store is fictional and has no photography, so a tile carries a colour
+    and the product's initials. Identical tiles would make a shelf unreadable."""
+    names = {p.image_url.rsplit("/", 1)[-1] for p in CATALOG if p.image_url}
+    served = {name: client.get(f"/chaos/static/{name}") for name in names}
+
+    assert all(r.status_code == 200 for r in served.values())
+    assert all(r.headers["content-type"] == "image/png" for r in served.values())
+    # Not all 22 differ - the palette is smaller than the catalogue - but a tile
+    # is never the same as its neighbour's, which is what a shelf needs.
+    assert len({r.content for r in served.values()}) > len(names) // 2
+    assert tile_for_image("surf-excel-1kg.png") == ((161, 92, 0), "SE")
 
 
 def test_the_state_endpoint_reports_the_active_version(client: TestClient) -> None:
@@ -313,6 +395,91 @@ def test_a_chaos_row_proves_its_location_the_same_way_every_other_row_does() -> 
 
     assert resolves_pincode(row, PINCODE) is True
     assert resolves_pincode(elsewhere, PINCODE) is False
+
+
+# -- shown, never compared ----------------------------------------------------
+def test_a_chaos_row_never_joins_a_cross_universe_group() -> None:
+    """The chaos store's prices are invented. Putting one in the same row as
+    three real ones would make the comparison say something untrue, however
+    honestly the row were labelled - so the row is shown on its own instead."""
+    zepto = NormalizedRow(
+        universe="zepto", name="Amul Salted Butter", brand="Amul",
+        variant="salted", qty=100.0, unit="g", price=62.0,
+    )
+    blinkit = NormalizedRow(
+        universe="blinkit", name="Amul Butter (Salted)", brand="Amul",
+        variant="salted", qty=100.0, unit="g", price=61.0,
+    )
+    # Same brand, same pack, same variant, agreeing name: this row would have
+    # joined the group above if it were allowed anywhere near it.
+    chaos = NormalizedRow(
+        universe="chaos", name="Amul Butter Salted", brand="Amul", variant="salted",
+        qty=100.0, unit="g", price=61.0, product_id="cm-1001",
+    )
+
+    comparison = match({"zepto": [zepto], "blinkit": [blinkit], "chaos": [chaos]})
+    compared = comparison.groups + comparison.unmatched
+
+    assert len(comparison.groups) == 1
+    assert comparison.groups[0].universes == ["blinkit", "zepto"]
+    assert "chaos" not in {row.universe for group in compared for row in group.rows}
+    assert [row.product_id for row in comparison.demo_rows] == ["cm-1001"]
+    # The comparison's own numbers describe the real universes only.
+    assert comparison.row_count == 2
+    assert comparison.universe_count == 2
+
+
+def test_a_chaos_only_run_produces_rows_to_show_and_nothing_to_compare() -> None:
+    chaos = NormalizedRow(
+        universe="chaos", name="Amul Butter Salted", brand="Amul", variant="salted",
+        qty=100.0, unit="g", price=61.0, product_id="cm-1001",
+    )
+
+    comparison = match({"chaos": [chaos]})
+
+    assert comparison.groups == [] and comparison.unmatched == []
+    assert comparison.demo_rows == [chaos]
+    assert (comparison.row_count, comparison.universe_count) == (0, 0)
+
+
+def test_the_snapshot_and_done_event_keep_the_chaos_rows_out_of_the_comparison(
+    tmp_path,
+) -> None:
+    """End to end through the mock path: chaos really collects, really validates,
+    and its rows arrive in `demo_rows` rather than in a comparison group."""
+    fixtures = tmp_path / "fixtures"
+    fixtures.mkdir()
+    (fixtures / "zepto_collector_result.json").write_text(
+        (FIXTURES / "zepto_collector_result.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    (fixtures / "chaos_collector_result.json").write_text(
+        json.dumps(catalog_rows("amul butter", PINCODE)), encoding="utf-8"
+    )
+    settings = make_settings(tmp_path / "runs", fixtures_dir=fixtures)
+
+    with TestClient(create_app(settings)) as local:
+        run_id = local.post(
+            "/api/runs", json={"query": "amul butter", "pincode": PINCODE}
+        ).json()["run_id"]
+        snapshot = wait_for_done(local, run_id)
+
+    comparison = snapshot["comparison"]
+    done = next(e for e in snapshot["events"] if e["type"] == "done")
+    validated = {e["universe"] for e in snapshot["events"] if e["type"] == "validated"}
+    compared = comparison["groups"] + comparison["unmatched"]
+
+    # It ran, and it stood behind its rows, exactly like a real universe.
+    assert "chaos" in validated
+    assert len(comparison["demo_rows"]) == len(CATALOG)
+    # Built server-side from the product id, and it really is the page this app
+    # serves - the one universe whose pattern is certain rather than inferred.
+    assert comparison["demo_rows"][0]["product_url"] == "/chaos/product/cm-1001"
+    assert "chaos" not in {r["universe"] for g in compared for r in g["rows"]}
+    # The done event's numbers are the comparison's numbers: real universes only.
+    assert done["data"]["demo_rows"] == len(CATALOG)
+    assert done["data"]["rows_total"] == comparison["row_count"]
+    assert done["data"]["groups"] == len(comparison["groups"])
 
 
 # -- dispatch gating ----------------------------------------------------------

@@ -40,6 +40,10 @@ export interface Universe {
   color: string;
   badge: "live" | "chaos" | "replay-only";
   collector_version: string;
+  /** The site's own search, as a template taking `{query}` and `{pincode}`.
+   *  Shown once in the universe's header, never per row. Null = no search link.
+   *  See server/product_links.py. */
+  search_url_template: string | null;
   trigger_mode: string;
   mapper: string;
   wired: boolean;
@@ -70,6 +74,11 @@ export interface NormalizedRow {
   eta_min: number | null;
   sponsored: boolean;
   product_id: string | null;
+  /** The row's own listing on the site it came from, built server-side from its
+   *  product id. Null when that universe has no verified URL pattern, or the row
+   *  carries no id, in which case the name renders as plain text. See
+   *  server/product_links.py. */
+  product_url: string | null;
   image_url: string | null;
   raw_ref: string | null;
   captured_at: string | null;
@@ -94,8 +103,13 @@ export interface ComparisonGroup {
 export interface Comparison {
   groups: ComparisonGroup[];
   unmatched: ComparisonGroup[];
+  /** Real universes only. See `DEMO_UNIVERSES` in server/resolve.py. */
   row_count: number;
   universe_count: number;
+  /** Rows from a demo universe (`chaos`), which never enter a comparison group:
+   *  the store is one this app serves itself, so its prices are invented. Shown
+   *  under their own heading, never matched. */
+  demo_rows: NormalizedRow[];
 }
 
 export interface RunMeta {

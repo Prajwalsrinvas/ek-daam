@@ -257,18 +257,133 @@ CATALOG: tuple[Product, ...] = (
         image_url="/chaos/static/parle-g.png",
         keywords=("biscuits", "glucose", "snacks", "tea time"),
     ),
+    Product(
+        product_id="cm-1016",
+        name="Surf Excel Easy Wash Detergent Powder",
+        brand="Surf Excel",
+        package_size="1 kg",
+        selling_price=132,
+        mrp=145,
+        available_quantity=14,
+        rating=4.4,
+        image_url="/chaos/static/surf-excel-1kg.png",
+        keywords=("detergent", "washing powder", "laundry", "household"),
+    ),
+    Product(
+        product_id="cm-1017",
+        name="Colgate Strong Teeth Toothpaste",
+        brand="Colgate",
+        package_size="200 g",
+        selling_price=118,
+        mrp=128,
+        available_quantity=19,
+        rating=4.5,
+        image_url="/chaos/static/colgate-200.png",
+        keywords=("toothpaste", "oral care", "dental", "household"),
+    ),
+    Product(
+        product_id="cm-1018",
+        name="Tata Sampann Unpolished Toor Dal",
+        brand="Tata",
+        package_size="1 kg",
+        selling_price=179,
+        mrp=199,
+        available_quantity=8,
+        rating=4.3,
+        image_url="/chaos/static/toor-dal-1kg.png",
+        keywords=("dal", "toor", "arhar", "pulses", "staples"),
+    ),
+    Product(
+        product_id="cm-1019",
+        name="Red Label Natural Care Tea",
+        brand="Brooke Bond",
+        package_size="500 g",
+        selling_price=285,
+        mrp=310,
+        available_quantity=5,
+        sponsored=True,
+        rating=4.2,
+        image_url="/chaos/static/red-label-500.png",
+        keywords=("tea", "chai", "beverages", "leaf tea"),
+    ),
+    Product(
+        product_id="cm-1020",
+        name="Sunfeast Dark Fantasy Choco Fills",
+        brand="Sunfeast",
+        package_size="75 g X 3",
+        selling_price=105,
+        mrp=114,
+        in_stock=False,
+        available_quantity=0,
+        rating=4.6,
+        image_url="/chaos/static/choco-fills-3pack.png",
+        keywords=("biscuits", "cookies", "chocolate", "snacks", "multipack"),
+    ),
+    Product(
+        product_id="cm-1021",
+        name="Vim Dishwash Bar",
+        brand="Vim",
+        package_size="300 g",
+        selling_price=39,
+        mrp=42,
+        available_quantity=27,
+        rating=4.4,
+        image_url="/chaos/static/vim-bar-300.png",
+        keywords=("dishwash", "bar", "utensils", "cleaning", "household"),
+    ),
+    Product(
+        product_id="cm-1022",
+        name="Saffola Gold Blended Cooking Oil",
+        brand="Saffola",
+        package_size="1 l",
+        selling_price=189,
+        mrp=210,
+        available_quantity=10,
+        rating=4.1,
+        image_url="/chaos/static/saffola-gold-1l.png",
+        keywords=("oil", "tel", "cooking", "staples"),
+    ),
 )
 
 
-def search(query: str | None) -> list[Product]:
-    """Every product whose name, brand or keywords contain all query tokens.
+def query_tokens(query: str | None) -> list[str]:
+    return [token for token in _TOKEN_SPLIT.split((query or "").lower()) if token]
 
-    An empty query lists the whole shelf, which is what the store front page is.
+
+def matches(product: Product, query: str | None) -> bool:
+    """Whether one product answers the query. An empty query matches everything,
+    which is what the store front page is."""
+    tokens = query_tokens(query)
+    return all(token in product.haystack for token in tokens)
+
+
+def matching(query: str | None) -> list[Product]:
+    """Only the products whose name, brand or keywords contain all query tokens."""
+    return [product for product in CATALOG if matches(product, query)]
+
+
+def search(query: str | None) -> list[Product]:
+    """The whole shelf, every time, with the products that answer `query` first.
+
+    A store that hides everything it was not asked about turns a visit into a
+    guessing game: type a word the catalogue was not built around and the shop
+    looks empty. The query still does something - it orders the shelf and marks
+    the hits, and every rendering carries `data-match` per product - but nothing
+    is withheld, so any search shows a stocked store.
     """
-    tokens = [token for token in _TOKEN_SPLIT.split((query or "").lower()) if token]
-    if not tokens:
+    hits = matching(query)
+    if len(hits) == len(CATALOG):
         return list(CATALOG)
-    return [p for p in CATALOG if all(token in p.haystack for token in tokens)]
+    hit_ids = {product.product_id for product in hits}
+    return hits + [product for product in CATALOG if product.product_id not in hit_ids]
+
+
+def find_product(product_id: str | None) -> Product | None:
+    """One shelf listing by id, for the product page."""
+    for product in CATALOG:
+        if product.product_id == product_id:
+            return product
+    return None
 
 
 def store_id_for(pincode: str) -> str:
@@ -340,6 +455,32 @@ def _esc(value: Any) -> str:
     return html.escape(str(value), quote=True)
 
 
+def _match_flag(product: Product, query: str) -> str:
+    return "true" if matches(product, query) else "false"
+
+
+def product_path(product_id: str, pincode: str = "") -> str:
+    """Where one product's own page lives. The pincode rides along so the page
+    can show prices for the same location the shelf was priced for; a single
+    parameter, so no ampersand has to be escaped into the href."""
+    base = f"/chaos/product/{product_id}"
+    return f"{base}?pincode={pincode}" if pincode else base
+
+
+def _no_match_note(query: str, products: list[Product]) -> str:
+    """The store's answer when the search matched nothing on the shelf.
+
+    Shown ABOVE the full catalogue rather than instead of it: the shelf is real
+    whatever was typed, and hiding it would make the store look shut.
+    """
+    if not query or any(matches(product, query) for product in products):
+        return ""
+    return (
+        '<p class="empty-note">No products matched that search. '
+        "The full shelf is below.</p>"
+    )
+
+
 _STYLE_V1 = """
 body{font-family:system-ui,sans-serif;margin:0;background:#f6f7f9;color:#12131a}
 .store-head{background:#155dfc;color:#fff;padding:14px 18px}
@@ -356,6 +497,8 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f6f7f9;color:#12131a}
 .sponsored-tag{font-size:11px;color:#a15c00;margin:4px 0 0}
 .stock-state{font-size:12px;margin:4px 0 0}
 .empty-note,.location-prompt{padding:18px;font-size:14px}
+.product-card[data-match="true"]{border-color:#155dfc;box-shadow:0 0 0 2px #dbeafe}
+.product-link{display:inline-block;margin-top:8px;font-size:12px;color:#155dfc}
 """
 
 _STYLE_V2 = """
@@ -377,6 +520,23 @@ body{font-family:Georgia,serif;margin:0;background:#fffdf7;color:#22201c}
 .flag-availability{display:block;font-size:12px}
 .thumb{width:46px;height:46px;object-fit:cover}
 .empty-note,.location-prompt{padding:16px;font-size:14px}
+.listing-row[data-match="true"] td{background:#fdf3d7}
+.item-link{font-size:12px;color:#8a4b00}
+"""
+
+_STYLE_PRODUCT = """
+body{font-family:system-ui,sans-serif;margin:0;background:#f6f7f9;color:#12131a}
+.detail-head{background:#155dfc;color:#fff;padding:14px 18px}
+.detail-head a{color:#fff}
+.detail{max-width:620px;margin:18px auto;background:#fff;border:1px solid #e2e4ea;
+  border-radius:10px;padding:18px;display:flex;gap:18px;flex-wrap:wrap}
+.detail img{width:96px;height:96px;object-fit:cover;border-radius:8px}
+.detail dl{margin:0;display:grid;grid-template-columns:auto auto;gap:4px 14px;font-size:14px}
+.detail dt{color:#5a5f6e}
+.detail dd{margin:0}
+.detail-name{margin:0 0 6px;font-size:18px}
+.detail-note{max-width:620px;margin:0 auto;padding:0 18px 18px;font-size:12px;color:#5a5f6e}
+.location-prompt{padding:18px;font-size:14px}
 """
 
 
@@ -412,9 +572,11 @@ def _finder_v2(query: str, pincode: str) -> str:
     )
 
 
-def _card_v1(product: Product) -> str:
+def _card_v1(product: Product, query: str = "", pincode: str = "") -> str:
     parts = [
-        f'<article class="product-card" data-product-id="{_esc(product.product_id)}">',
+        '<article class="product-card" '
+        f'data-match="{_match_flag(product, query)}" '
+        f'data-product-id="{_esc(product.product_id)}">',
         f'<img class="product-image" src="{_esc(product.image_url or "")}" alt="">',
         f'<h3 class="product-title">{_esc(product.name)}</h3>',
         f'<p class="product-brand">{_esc(product.brand)}</p>',
@@ -433,17 +595,22 @@ def _card_v1(product: Product) -> str:
     )
     if product.rating is not None:
         parts.append(f'<p class="rating-value">{product.rating}</p>')
+    parts.append(
+        f'<a class="product-link" href="{_esc(product_path(product.product_id, pincode))}">'
+        "View product</a>"
+    )
     parts.append("</article>")
     return "".join(parts)
 
 
-def _row_v2(product: Product) -> str:
+def _row_v2(product: Product, query: str = "", pincode: str = "") -> str:
     promoted = '<span class="flag-promoted">Promoted</span>' if product.sponsored else ""
     stock_text = "Available now" if product.in_stock else "Sold out"
     quantity = "" if product.available_quantity is None else str(product.available_quantity)
     rating = "" if product.rating is None else str(product.rating)
     return (
-        f'<tr class="listing-row" data-sku="{_esc(product.product_id)}" '
+        f'<tr class="listing-row" data-match="{_match_flag(product, query)}" '
+        f'data-sku="{_esc(product.product_id)}" '
         f'data-stock="{"in" if product.in_stock else "out"}" data-units="{_esc(quantity)}">'
         f'<td class="cell-image"><img class="thumb" src="{_esc(product.image_url or "")}" alt=""></td>'
         '<td class="cell-identity">'
@@ -457,6 +624,9 @@ def _row_v2(product: Product) -> str:
         f'<td class="cell-flags">{promoted}'
         f'<span class="flag-availability">{stock_text}</span></td>'
         f'<td class="cell-score">{_esc(rating)}</td>'
+        '<td class="cell-link">'
+        f'<a class="item-link" href="{_esc(product_path(product.product_id, pincode))}">'
+        "View product</a></td>"
         "</tr>"
     )
 
@@ -484,7 +654,7 @@ def _render_v1(products: list[Product], query: str, pincode: str) -> str:
         )
         return _page(f"{STORE_NAME}", _STYLE_V1, body)
 
-    cards = "".join(_card_v1(product) for product in products)
+    cards = "".join(_card_v1(product, query, pincode) for product in products)
     if not cards:
         cards = '<p class="empty-note">No products matched that search.</p>'
     body = (
@@ -497,6 +667,7 @@ def _render_v1(products: list[Product], query: str, pincode: str) -> str:
         f"{eta_minutes_for(pincode)} minutes</span></p>"
         "</header>"
         f"{_finder_v1(query, pincode)}"
+        f"{_no_match_note(query, products)}"
         f'<section class="results" data-result-count="{len(products)}">{cards}</section>'
         "</main>"
     )
@@ -512,11 +683,11 @@ def _render_v2(products: list[Product], query: str, pincode: str) -> str:
         )
         return _page(f"{STORE_NAME}", _STYLE_V2, body)
 
-    rows = "".join(_row_v2(product) for product in products)
+    rows = "".join(_row_v2(product, query, pincode) for product in products)
     table = (
         '<table class="listing-table" data-rows="{count}"><thead><tr>'
         '<th scope="col">Item</th><th scope="col">Product</th><th scope="col">Cost</th>'
-        '<th scope="col">Status</th><th scope="col">Score</th>'
+        '<th scope="col">Status</th><th scope="col">Score</th><th scope="col">Page</th>'
         f"</tr></thead><tbody>{rows}</tbody></table>"
     ).format(count=len(products))
     if not rows:
@@ -529,7 +700,7 @@ def _render_v2(products: list[Product], query: str, pincode: str) -> str:
         f"{_esc(resolved_area_for(pincode))}</span>"
         f'<span class="drop-eta">{eta_minutes_for(pincode)} min drop</span>'
         "</div>"
-        f"{_finder_v2(query, pincode)}{table}"
+        f"{_finder_v2(query, pincode)}{_no_match_note(query, products)}{table}"
         "</div>"
     )
     return _page(f"{STORE_NAME} - {query or 'all products'}", _STYLE_V2, body)
@@ -553,6 +724,123 @@ def render_page(version: str, query: str | None, pincode: str | None) -> str:
     renderer = _RENDERERS.get(version, _render_v1)
     clean_query = " ".join((query or "").split())[:60]
     return renderer(search(clean_query), clean_query, clean_pincode(pincode))
+
+
+# ---------------------------------------------------------------------------
+# the product page
+# ---------------------------------------------------------------------------
+# One template for both store versions. The redesign the chaos demo turns on is
+# the SEARCH page's, because the search page is the one the collector reads; a
+# product page that also changed shape would add nothing to the demonstration
+# and one more thing to keep in sync.
+def _detail_row(term: str, value: str) -> str:
+    return f"<dt>{_esc(term)}</dt><dd>{_esc(value)}</dd>"
+
+
+def render_product_page(product_id: str, pincode: str | None) -> str | None:
+    """One product's own page, or None when that id is not on the shelf.
+
+    Location behaves the way the shelf does: with no valid pincode there is a
+    prompt and no price, because a price with no delivery area behind it is not
+    a price anybody can act on.
+    """
+    product = find_product(product_id)
+    if product is None:
+        return None
+
+    resolved = clean_pincode(pincode)
+    back = f"/chaos/search?pincode={resolved}" if resolved else "/chaos/search"
+    head = (
+        '<header class="detail-head">'
+        f'<p class="brand-mark">{STORE_NAME}</p>'
+        f'<a class="back-link" href="{_esc(back)}">Back to the shelf</a>'
+        "</header>"
+    )
+
+    if not resolved:
+        body = (
+            f'<main class="detail-page" data-page="product" '
+            f'data-product-id="{_esc(product.product_id)}">{head}'
+            '<section class="location-prompt" id="product-location-prompt">'
+            "Enter a 6-digit pincode on the shelf to see prices for your area."
+            "</section></main>"
+        )
+        return _page(f"{product.name} - {STORE_NAME}", _STYLE_PRODUCT, body)
+
+    facts = [
+        _detail_row("Brand", product.brand),
+        _detail_row("Pack", product.package_size),
+        _detail_row("Price", _rupees(product.selling_price)),
+        _detail_row("MRP", _rupees(product.mrp)),
+        _detail_row("Availability", "In stock" if product.in_stock else "Out of stock"),
+    ]
+    if product.available_quantity is not None:
+        facts.append(_detail_row("Units listed", str(product.available_quantity)))
+    if product.rating is not None:
+        facts.append(_detail_row("Rating", str(product.rating)))
+    if product.sponsored:
+        facts.append(_detail_row("Placement", "Sponsored"))
+    facts.append(_detail_row("Delivering to", resolved_area_for(resolved)))
+    facts.append(_detail_row("Listed delivery", f"{eta_minutes_for(resolved)} minutes"))
+
+    body = (
+        f'<main class="detail-page" data-page="product" '
+        f'data-product-id="{_esc(product.product_id)}">{head}'
+        '<section class="detail">'
+        f'<img class="detail-image" src="{_esc(product.image_url or "")}" alt="">'
+        "<div>"
+        f'<h1 class="detail-name">{_esc(product.name)}</h1>'
+        f"<dl>{''.join(facts)}</dl>"
+        "</div></section>"
+        '<p class="detail-note">'
+        f"{STORE_NAME} is a demo store this app serves itself. The products, the "
+        "prices and the delivery times on this page are invented."
+        "</p></main>"
+    )
+    return _page(f"{product.name} - {STORE_NAME}", _STYLE_PRODUCT, body)
+
+
+# ---------------------------------------------------------------------------
+# product thumbnails
+# ---------------------------------------------------------------------------
+# Flat colour tiles, one per product, drawn at request time. The store is
+# fictional and has no photography; the tiles exist so a shelf looks like a
+# shelf and so two listings can be told apart at a glance.
+_TILE_COLORS: tuple[tuple[int, int, int], ...] = (
+    (21, 93, 252),
+    (13, 148, 136),
+    (161, 92, 0),
+    (124, 58, 237),
+    (190, 24, 93),
+    (22, 101, 52),
+    (194, 65, 12),
+    (30, 64, 175),
+    (101, 116, 205),
+    (133, 77, 14),
+    (15, 118, 110),
+)
+
+_INITIAL_SPLIT = re.compile(r"[^A-Za-z0-9]+")
+
+
+def _initials(name: str) -> str:
+    words = [word for word in _INITIAL_SPLIT.split(name) if word]
+    return "".join(word[0] for word in words[:2]).upper() or "CM"
+
+
+def tile_for_image(name: str) -> tuple[tuple[int, int, int], str]:
+    """The colour and the letters for one thumbnail file name.
+
+    Keyed off the product the image belongs to, so a tile is stable for as long
+    as that product is on the shelf. An unknown name still gets a tile rather
+    than a 404: the file name is the only thing the store promised.
+    """
+    for product in CATALOG:
+        if product.image_url and product.image_url.rsplit("/", 1)[-1] == name:
+            index = sum(ord(char) for char in product.product_id) % len(_TILE_COLORS)
+            return _TILE_COLORS[index], _initials(product.name)
+    index = sum(ord(char) for char in name) % len(_TILE_COLORS)
+    return _TILE_COLORS[index], "CM"
 
 
 def catalog_rows(query: str | None, pincode: str | None) -> list[dict[str, Any]]:

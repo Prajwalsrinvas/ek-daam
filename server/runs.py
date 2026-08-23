@@ -532,9 +532,15 @@ class RunManager:
                 EventType.DONE,
                 {
                     "universes": meta.universes,
+                    # The comparison's own numbers: real universes only. Rows
+                    # from a demo universe are counted on their own line because
+                    # they were never eligible to be compared, and folding them
+                    # into the total would say the run read more shops than it
+                    # did.
                     "rows_total": comparison.row_count,
                     "groups": len(comparison.groups),
                     "unmatched": len(comparison.unmatched),
+                    "demo_rows": len(comparison.demo_rows),
                 },
             )
             meta.status = "done"

@@ -254,6 +254,43 @@ the broken template.
 
 ---
 
+## Product links: one file, one edit per site
+
+No collector reports a product URL, so every link the UI shows is built from the
+site's own product id. Both maps live in `server/product_links.py` and nothing
+else in the app writes a URL down: `PRODUCT_URL_TEMPLATES` builds the per-row
+link, `SEARCH_URL_TEMPLATES` builds the one search link shown in a universe's
+column header.
+
+To retune a pattern, edit its template. To switch a site off, set its template to
+`None`, and that universe's rows then render as plain text instead of as links,
+which is the right answer for a pattern nobody has verified against the live
+site. A link that 404s is worse than no link, because it reads as the app having
+matched the wrong product.
+
+**Where each site stands**, checked against the live sites through a browser:
+
+| universe | product link | why |
+| --- | --- | --- |
+| `blinkit` | on | `/prn/<slug>/prid/<id>` lands on the exact product. |
+| `chaos` | on | The page is served by this app, so it is certain rather than inferred. |
+| `zepto` | off | The `/pvid/` route wants Zepto's VARIANT id. The collector does not export one, so the id we hold would build a link to some other listing. |
+| `instamart` | off | The product page is store-gated and does not resolve for a visitor whose session has not picked the same store. |
+
+The pattern that failed is kept in a comment beside each `None`, so turning one
+back on is a copy rather than a rediscovery. Search links stay on for all three
+live universes either way: a search is not a listing, and every site answers one
+for any visitor.
+
+`{product_id}` is the id the collector read. `{slug}` is the product name,
+slugified, and is cosmetic on the two sites that take one: both route on the id.
+The links are COMPUTED at serialisation time from `NormalizedRow`, never stored,
+so a template fixed today also fixes the links on runs captured yesterday.
+`tests/test_product_links.py` pins the shape each template produces, one test per
+site, so a retuned pattern fails there rather than in front of a judge.
+
+---
+
 ## Adding a server event type
 
 This takes edits in **five** places. Miss one of the frontend two and the event
@@ -324,6 +361,8 @@ now scans `runs/replays/` as well; untracked `runs/r_*` dirs are gitignored.
 | `zero_rows {broken}` | The honest default. Empty or unparseable collector output. Also what a payload shape mismatch looks like. |
 | `artifact_failed` | The page capture could not be fetched. **Non-terminal** — the rows still stand and the universe still validates. |
 | `failed` on a universe | That universe only. A run never dies because one universe did. |
+| `retriggered` | Bright Data accepted the job but never started navigating with it (`reason: job never started navigating`). The stalled job was canceled and ONE replacement was triggered for the same universe, inside the same universe timeout. **Non-terminal**: the universe is still collecting, and the `triggered` event right after it carries the new job id. Only one retrigger per universe per run: if the replacement stalls too, the universe times out. |
+| `429` + `daily live-run budget reached, try tomorrow or watch the demo replay` | `SVERSE_DAILY_RUN_BUDGET` LIVE runs have already been started today, across every client. Nothing is wrong with the request; the day is spent. Replays and self-heals call no collector and are not counted, so both still work. The count is held in memory and keyed on the UTC date, so it resets at midnight UTC or on a restart. |
 
 A universe that did not reach `validated` never contributes rows, even after a
 restart: `rows_for()` re-derives from a saved raw payload only for universes with

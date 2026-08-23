@@ -65,6 +65,19 @@ the app is included in [`collectors/`](collectors/README.md).
 After a run completes, click **Replay this run** to stream its saved events again.
 Replay runs are visibly labelled and do not call Bright Data.
 
+## The chaos store
+
+The app serves its own demo store at `/chaos`, with two different renderings of
+one catalogue. Flipping between them breaks the collector that reads the store,
+which is what makes a self-healing run something you can watch on demand. Rows
+from this store are shown under their own heading and are never matched against
+the live universes, because its products and prices are invented.
+
+`./chaos-monkey.sh` prints the version being served and flips it to the next one.
+Add `--heal` to start a self-heal run instead and print its run id. It reads
+`CHAOS_ADMIN_TOKEN` from the environment and takes `EKDAAM_URL` for a host other
+than the default.
+
 ## How it works
 
 ```text

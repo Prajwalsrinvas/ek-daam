@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from .config import Settings
 from .mappers import has_mapper, mapper_is_stub
+from .product_links import SEARCH_URL_TEMPLATES
 
 Badge = Literal["live", "chaos", "replay-only"]
 TriggerMode = Literal["batch", "realtime"]
@@ -30,6 +31,12 @@ class Universe(BaseModel):
     collector_version: str = "dev"
     trigger_mode: TriggerMode = "batch"
     mapper: str
+
+    # The site's own search for the run's words, as a template the UI fills in
+    # with `{query}` and `{pincode}`. ONE per universe, shown in that universe's
+    # header: a search link beside a listing reads as a link to that listing,
+    # and it is not one. None = no search link. See server/product_links.py.
+    search_url_template: str | None = None
 
     # Derived, filled in by `universes()`.
     wired: bool = Field(default=False, description="collector id present in env")
@@ -79,6 +86,7 @@ def universes(settings: Settings) -> list[Universe]:
                 update={
                     "collector_id": "",  # never leaves the process
                     "collector_version": settings.collector_version_for(row.id),
+                    "search_url_template": SEARCH_URL_TEMPLATES.get(row.id),
                     "wired": wired,
                     "dispatchable": dispatchable,
                     "status": status,

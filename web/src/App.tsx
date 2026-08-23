@@ -25,6 +25,7 @@ const EMPTY_COMPARISON: Comparison = {
   unmatched: [],
   row_count: 0,
   universe_count: 0,
+  demo_rows: [],
 };
 
 const PINCODE_LENGTH = 6;
@@ -168,7 +169,9 @@ export default function App() {
 
   const isMock = (state.mode ?? serverMode) === "mock";
   const nothingToCompare =
-    state.done && !comparisonError && comparison.groups.length + comparison.unmatched.length === 0;
+    state.done &&
+    !comparisonError &&
+    comparison.groups.length + comparison.unmatched.length + comparison.demo_rows.length === 0;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -282,7 +285,12 @@ export default function App() {
           returned nothing usable, or produced no row that survived the validation gate.
         </p>
       ) : (
-        <ComparisonTable comparison={comparison} registry={registry} />
+        <ComparisonTable
+          comparison={comparison}
+          registry={registry}
+          query={state.query ?? ""}
+          pincode={state.pincode ?? ""}
+        />
       )}
     </div>
   );

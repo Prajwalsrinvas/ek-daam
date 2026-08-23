@@ -309,8 +309,15 @@ export function describe(event: RunEvent): string {
       return event.universe
         ? `timed out after ${d.after_s}s`
         : `run timed out after ${d.after_s}s`;
-    case "done":
-      return `run complete — ${d.rows_total} row(s), ${d.groups} matched group(s)`;
+    case "done": {
+      // `rows_total` counts the real universes. A demo universe's rows are named
+      // separately because they were never eligible to be compared.
+      const demo = num(d.demo_rows);
+      return (
+        `run complete — ${d.rows_total} row(s), ${d.groups} matched group(s)` +
+        (demo ? `, ${demo} demo row(s) shown separately` : "")
+      );
+    }
     case "heal_started":
       return `self-heal requested (${d.prompt_chars} character prompt)`;
     case "heal_previewed":

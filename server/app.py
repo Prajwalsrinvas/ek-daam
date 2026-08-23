@@ -19,8 +19,13 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Streamin
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .bd_client import placeholder_png
-from .chaos_store import VERSIONS, ChaosStore
+from .bd_client import initials_png
+from .chaos_store import (
+    VERSIONS,
+    ChaosStore,
+    render_product_page,
+    tile_for_image,
+)
 from .config import REPO_ROOT, Settings, get_settings
 from .events import heartbeat_frame, parse_last_event_id
 from .registry import listed
@@ -256,14 +261,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         store: ChaosStore = request.app.state.chaos
         return HTMLResponse(store.render(q, pincode), headers=NO_STORE)
 
+    @app.get("/chaos/product/{product_id}", response_class=HTMLResponse)
+    async def chaos_product(product_id: str, pincode: str = "") -> HTMLResponse:
+        """One product's own page. Shared by both store versions on purpose: the
+        redesign the demo turns on is the search page's, because the search page
+        is what the collector reads."""
+        page = render_product_page(product_id, pincode)
+        if page is None:
+            raise HTTPException(status_code=404, detail="no such product")
+        return HTMLResponse(page, headers=NO_STORE)
+
     @app.get("/chaos/static/{name}")
     async def chaos_image(name: str) -> Response:
-        """A flat placeholder image per product tile. The store is fictional and
-        has no product photography; the tiles exist so the page has the shape of
-        a real listing."""
+        """One flat tile per product: its own colour, its own initials. The store
+        is fictional and has no product photography, so the tiles exist to give
+        the page the shape of a real listing and to tell two listings apart -
+        never to look like a photograph."""
         if not _CHAOS_IMAGE_RE.match(name):
             raise HTTPException(status_code=404, detail="no such image")
-        return Response(content=placeholder_png((21, 93, 252), 96, 96), media_type="image/png")
+        rgb, initials = tile_for_image(name)
+        return Response(content=initials_png(rgb, 96, 96, initials), media_type="image/png")
 
     @app.get("/api/chaos")
     async def chaos_state(request: Request) -> dict[str, Any]:

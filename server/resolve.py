@@ -21,12 +21,22 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+
+from .product_links import product_url as build_product_url
 
 # `close` = same brand token, same base pack size, same variant, and the product
 # names agree. It is a heuristic and says so. There is deliberately no stronger
 # label: this resolver has no product identity to be certain about.
 Confidence = Literal["close", "unmatched"]
+
+# Universes whose rows are demonstration data, not shop data. `chaos` points at
+# the store this app serves itself, so its prices are invented; putting an
+# invented price in the same row as three real ones would make the comparison
+# say something that is not true, however honestly the row were labelled. Its
+# rows still stream, still validate and are still shown - on their own, under
+# their own heading.
+DEMO_UNIVERSES: frozenset[str] = frozenset({"chaos"})
 
 # Canonical units. Everything is normalised to a base unit so 1 kg and 1000 g
 # group together.
@@ -79,6 +89,19 @@ class NormalizedRow(BaseModel):
     # place of it, and it takes no part in `group_key`.
     resolved_area: str | None = None
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def product_url(self) -> str | None:
+        """The row's own listing on the site it came from, built from its
+        product id (`server/product_links.py`).
+
+        Computed rather than stored, and derived rather than collected: no
+        collector reports a URL, and a pattern that later turns out to be wrong
+        must not survive in a saved run. None means there is no honest link,
+        which the UI renders as plain text.
+        """
+        return build_product_url(self.universe, self.product_id, self.name)
+
 
 class ComparisonGroup(BaseModel):
     key: str
@@ -96,12 +119,19 @@ class Comparison(BaseModel):
 
     `groups` are cross-universe matches (the actual comparison). `unmatched`
     holds single-source groups — real rows we refuse to claim a match for.
+    `demo_rows` holds the rows from `DEMO_UNIVERSES`, which take no part in
+    either: they are shown, never compared.
+
+    `row_count` and `universe_count` describe the comparison, so they count the
+    real universes only. A demo row that inflated the run's row total would make
+    the run look like it read more shops than it did.
     """
 
     groups: list[ComparisonGroup] = Field(default_factory=list)
     unmatched: list[ComparisonGroup] = Field(default_factory=list)
     row_count: int = 0
     universe_count: int = 0
+    demo_rows: list[NormalizedRow] = Field(default_factory=list)
 
 
 def normalize_unit(unit: str | None) -> str | None:
@@ -249,12 +279,23 @@ def _place(subgroups: list[list[_Member]], member: _Member) -> None:
 
 
 def match(rows_by_universe: dict[str, list[NormalizedRow]]) -> Comparison:
-    """The v0 resolver. Deterministic, order-stable, no fuzzy matching."""
+    """The v0 resolver. Deterministic, order-stable, no fuzzy matching.
+
+    Rows from `DEMO_UNIVERSES` never enter a bucket. They are collected into
+    `demo_rows` before any grouping happens, which is the only way to guarantee
+    an invented price cannot end up in a row of real ones. A filter applied
+    afterwards would still have let the demo row set the group's brand, pack and
+    confidence on its way through.
+    """
     buckets: dict[str, list[list[_Member]]] = {}
     order: list[str] = []
     total = 0
+    demo_rows: list[NormalizedRow] = []
 
     for universe in sorted(rows_by_universe):
+        if universe in DEMO_UNIVERSES:
+            demo_rows.extend(rows_by_universe[universe])
+            continue
         for row in rows_by_universe[universe]:
             total += 1
             key = group_key(row)
@@ -294,5 +335,8 @@ def match(rows_by_universe: dict[str, list[NormalizedRow]]) -> Comparison:
         groups=groups,
         unmatched=unmatched,
         row_count=total,
-        universe_count=len([u for u, r in rows_by_universe.items() if r]),
+        universe_count=len(
+            [u for u, r in rows_by_universe.items() if r and u not in DEMO_UNIVERSES]
+        ),
+        demo_rows=demo_rows,
     )

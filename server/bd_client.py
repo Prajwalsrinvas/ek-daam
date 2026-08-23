@@ -258,19 +258,9 @@ _PLACEHOLDER_COLORS = {
 }
 
 
-def placeholder_png(rgb: tuple[int, int, int], width: int = 320, height: int = 200) -> bytes:
-    """A synthetic, obviously-not-a-real-screenshot PNG for mock runs.
-
-    Diagonal stripes so nobody can mistake it for a captured page. Written by
-    hand to avoid pulling an imaging dependency in for one placeholder.
-    """
-    r, g, b = rgb
-    dark = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
-    rows = bytearray()
-    for y in range(height):
-        rows.append(0)  # PNG filter type 0 for this scanline
-        for x in range(width):
-            rows.extend(dark if ((x + y) // 12) % 2 else (r, g, b))
+def _encode_png(width: int, height: int, scanlines: bytearray) -> bytes:
+    """Truecolour PNG from raw filter-0 scanlines. Written by hand to avoid
+    pulling an imaging dependency in for two placeholders."""
 
     def chunk(tag: bytes, data: bytes) -> bytes:
         body = tag + data
@@ -279,9 +269,111 @@ def placeholder_png(rgb: tuple[int, int, int], width: int = 320, height: int = 2
     return (
         b"\x89PNG\r\n\x1a\n"
         + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
-        + chunk(b"IDAT", zlib.compress(bytes(rows), 6))
+        + chunk(b"IDAT", zlib.compress(bytes(scanlines), 6))
         + chunk(b"IEND", b"")
     )
+
+
+def placeholder_png(rgb: tuple[int, int, int], width: int = 320, height: int = 200) -> bytes:
+    """A synthetic, obviously-not-a-real-screenshot PNG for mock runs.
+
+    Diagonal stripes so nobody can mistake it for a captured page.
+    """
+    r, g, b = rgb
+    dark = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
+    rows = bytearray()
+    for y in range(height):
+        rows.append(0)  # PNG filter type 0 for this scanline
+        for x in range(width):
+            rows.extend(dark if ((x + y) // 12) % 2 else (r, g, b))
+    return _encode_png(width, height, rows)
+
+
+# A 3x5 bitmap face, enough for the letters and digits a product tile needs.
+# One string per pixel row, "1" for ink.
+_FONT_3X5: dict[str, tuple[str, str, str, str, str]] = {
+    "A": ("010", "101", "111", "101", "101"),
+    "B": ("110", "101", "110", "101", "110"),
+    "C": ("011", "100", "100", "100", "011"),
+    "D": ("110", "101", "101", "101", "110"),
+    "E": ("111", "100", "110", "100", "111"),
+    "F": ("111", "100", "110", "100", "100"),
+    "G": ("011", "100", "101", "101", "011"),
+    "H": ("101", "101", "111", "101", "101"),
+    "I": ("111", "010", "010", "010", "111"),
+    "J": ("001", "001", "001", "101", "010"),
+    "K": ("101", "101", "110", "101", "101"),
+    "L": ("100", "100", "100", "100", "111"),
+    "M": ("101", "111", "111", "101", "101"),
+    "N": ("101", "111", "111", "111", "101"),
+    "O": ("010", "101", "101", "101", "010"),
+    "P": ("110", "101", "110", "100", "100"),
+    "Q": ("010", "101", "101", "111", "011"),
+    "R": ("110", "101", "110", "101", "101"),
+    "S": ("011", "100", "010", "001", "110"),
+    "T": ("111", "010", "010", "010", "010"),
+    "U": ("101", "101", "101", "101", "011"),
+    "V": ("101", "101", "101", "101", "010"),
+    "W": ("101", "101", "111", "111", "101"),
+    "X": ("101", "101", "010", "101", "101"),
+    "Y": ("101", "101", "010", "010", "010"),
+    "Z": ("111", "001", "010", "100", "111"),
+    "0": ("111", "101", "101", "101", "111"),
+    "1": ("010", "110", "010", "010", "111"),
+    "2": ("111", "001", "111", "100", "111"),
+    "3": ("111", "001", "111", "001", "111"),
+    "4": ("101", "101", "111", "001", "001"),
+    "5": ("111", "100", "111", "001", "111"),
+    "6": ("111", "100", "111", "101", "111"),
+    "7": ("111", "001", "001", "001", "001"),
+    "8": ("111", "101", "111", "101", "111"),
+    "9": ("111", "101", "111", "001", "111"),
+}
+
+_GLYPH_W = 3
+_GLYPH_H = 5
+_GLYPH_GAP = 1
+
+
+def initials_png(
+    rgb: tuple[int, int, int], width: int, height: int, text: str, max_glyphs: int = 3
+) -> bytes:
+    """A flat colour tile with `text` drawn on it in the 3x5 face above.
+
+    This is what a product thumbnail is in the chaos store: the shop is
+    fictional and has no photography, so each tile carries its own colour and
+    its product's initials, which is enough to tell one listing from another on
+    a shelf without pretending to be a photograph. Ink is black or white,
+    whichever the tile colour can carry.
+    """
+    glyphs = [_FONT_3X5[ch] for ch in text.upper() if ch in _FONT_3X5][:max_glyphs]
+    r, g, b = rgb
+    # Rec. 601 luma: a dark tile takes white ink, a light one takes black.
+    ink = (255, 255, 255) if (r * 299 + g * 587 + b * 114) / 1000 < 140 else (17, 17, 17)
+
+    mask: set[tuple[int, int]] = set()
+    if glyphs:
+        span_w = len(glyphs) * _GLYPH_W + (len(glyphs) - 1) * _GLYPH_GAP
+        # Two cells of margin on each axis so the letters never touch the edge.
+        scale = max(1, min(width // (span_w + 2), height // (_GLYPH_H + 2)))
+        left = (width - span_w * scale) // 2
+        top = (height - _GLYPH_H * scale) // 2
+        for index, glyph in enumerate(glyphs):
+            origin = left + index * (_GLYPH_W + _GLYPH_GAP) * scale
+            for row, bits in enumerate(glyph):
+                for column, bit in enumerate(bits):
+                    if bit != "1":
+                        continue
+                    for dy in range(scale):
+                        for dx in range(scale):
+                            mask.add((origin + column * scale + dx, top + row * scale + dy))
+
+    rows = bytearray()
+    for y in range(height):
+        rows.append(0)  # PNG filter type 0 for this scanline
+        for x in range(width):
+            rows.extend(ink if (x, y) in mask else rgb)
+    return _encode_png(width, height, rows)
 
 
 class MockClient:
